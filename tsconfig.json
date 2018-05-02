@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es6",
+        "sourceMap": false,
+        "moduleResolution": "node",
+        "rootDir": "./",
+        "outDir": "dist/",
+        "lib": [
+            "es2015",
+            "es7"
+        ]
+    },
+    "files": [
+        "./node_modules/@types/node/index.d.ts",
+        "./node_modules/@types/mocha/index.d.ts"
+    ],
+    "include": [
+        "lib/**/*",
+        "test/**/*"
+    ],
+    "exclude": [
+        "node_modules"
+    ]
+}
