@@ -18,11 +18,19 @@ stuff.
 - Is typed with Typescript
 - Has good test coverage
 
+### Installation
+
+Easy enough:
+
+```bash
+$ npm install --save @gthole/simpleagent
+```
+
 ### What's Supported?
 Basic JSON requests work just fine:
 
 ```javascript
-const request = require('simpleagent');
+const request = require('@gthole/simpleagent');
 
 // Auth and query strings
 request
@@ -33,8 +41,10 @@ request
         // Do something
     });
 
-// Promises
-const resp = await request.get('http://www.example.com/foo?bar=baz').promise();
+// Promises, within an async function
+const resp = await request
+    .get('http://www.example.com/foo?bar=baz')
+    .promise();
 
 // Sending JSON bodies, HTTPS, and setting headers
 request
