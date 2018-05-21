@@ -1,12 +1,12 @@
 {
-    "name": "@gthole/simpleagent",
-    "version": "1.0.1",
+    "name": "simpleragent",
+    "version": "1.0.0",
     "author": "gthole@gmail.com",
     "bugs": {
-        "url": "https://github.com/gthole/simpleagent/issues"
+        "url": "https://github.com/gthole/simpleragent/issues"
     },
     "description": "A NodeJS simplified version of SuperAgent.js for making JSON HTTP requests",
-    "homepage": "https://github.com/gthole/simpleagent#readme",
+    "homepage": "https://github.com/gthole/simpleragent#readme",
     "keywords": [
         "http",
         "ajax",
@@ -17,7 +17,7 @@
     "main": "dist/lib/index.js",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/gthole/simpleagent.git"
+        "url": "git+https://github.com/gthole/simpleragent.git"
     },
     "scripts": {
         "compile": "tsc",

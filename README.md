@@ -1,4 +1,4 @@
-# SimpleAgent
+# SimplerAgent
 A NodeJS simplified version of [SuperAgent.js](http://visionmedia.github.io/superagent/)
 for making JSON HTTP requests.
 
@@ -11,7 +11,7 @@ the time.  If I'm bundling up a small Lambda function, it's better to have a
 super small library to provide the same functionality without all the extra
 stuff.
 
-**SimpleAgent:**
+### SimplerAgent
 - Can probably do most of what you need for API requests
 - Has no production dependencies
 - Is small: roughly 100 lines of code
@@ -23,14 +23,14 @@ stuff.
 Easy enough:
 
 ```bash
-$ npm install --save @gthole/simpleagent
+$ npm install --save simpleragent
 ```
 
 ### What's Supported?
 Basic JSON requests work just fine:
 
 ```javascript
-const request = require('@gthole/simpleagent');
+const request = require('simpleragent');
 
 // Auth and query strings
 request

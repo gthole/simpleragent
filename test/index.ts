@@ -2,7 +2,7 @@ import assert = require('assert');
 import nock = require('nock');
 import request = require('../lib/');
 
-describe('SimpleAgent requests', () => {
+describe('SimplerAgent requests', () => {
     afterEach(() => nock.cleanAll());
 
     it('should "get" resources', (done) => {
@@ -57,7 +57,7 @@ describe('SimpleAgent requests', () => {
         request
             .get('http://www.unit-test.com/api/v1')
             .query('foo=Bulstrode')
-        	.catch((err) => {
+            .catch((err) => {
                 assert.ok(err);
                 assert.equal(err.statusCode, 500);
                 done();

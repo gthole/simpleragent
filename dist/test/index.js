@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const assert = require("assert");
 const nock = require("nock");
 const request = require("../lib/");
-describe('SimpleAgent requests', () => {
+describe('SimplerAgent requests', () => {
     afterEach(() => nock.cleanAll());
     it('should "get" resources', (done) => {
         nock('http://www.unit-test.com:80')
