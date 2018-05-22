@@ -43,21 +43,29 @@ class Request {
         return this;
     }
 
-    set(header: string, value: string) {
-        this._params.headers[header] = value;
+    set(header: string | Object, value?: string) {
+        if (typeof header === 'string') {
+            this._params.headers[header] = value;
+        } else {
+            Object.keys(header).forEach((h) => this._params.headers[h] = header[h]);
+        }
         return this;
     }
 
-    query(arg: any) {
+    query(arg: Object) {
         if (typeof arg === 'string') arg = querystring.parse(arg);
         Object.keys(arg).forEach((k) => this._query[k] = arg[k]);
         return this;
     }
 
-    send(body: any) {
-        this._body = JSON.stringify(body);
-        this._params.headers['Content-Length'] = this._body.length;
-        this._params.headers['Content-Type'] = 'application/json';
+    send(body: string | Object) {
+        if (typeof body === 'string') {
+            this._body = body;
+        } else {
+            this._body = JSON.stringify(body);
+            this._params.headers['Content-Length'] = this._body.length;
+            this._params.headers['Content-Type'] = 'application/json';
+        }
         return this;
     }
 
@@ -68,13 +76,14 @@ class Request {
                 this._params.path += '?' + querystring.stringify(this._query);
             }
             const r = protos[this._protocol].request(this._params, (res) => {
-                res.text = '';
-                res.on('data', (chunk) => res.text += chunk);
+                const chunks = [];
+                res.on('data', (chunk) => chunks.push(chunk));
 
                 res.on('end', () => {
                     if (res.statusCode >= 400) {
                         return reject(res);
                     }
+                    res.text = Buffer.concat(chunks).toString();
                     try {
                         res.body = JSON.parse(res.text);
                     } catch (e) {

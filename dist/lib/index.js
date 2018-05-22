@@ -29,7 +29,12 @@ class Request {
         return this;
     }
     set(header, value) {
-        this._params.headers[header] = value;
+        if (typeof header === 'string') {
+            this._params.headers[header] = value;
+        }
+        else {
+            Object.keys(header).forEach((h) => this._params.headers[h] = header[h]);
+        }
         return this;
     }
     query(arg) {
@@ -39,9 +44,14 @@ class Request {
         return this;
     }
     send(body) {
-        this._body = JSON.stringify(body);
-        this._params.headers['Content-Length'] = this._body.length;
-        this._params.headers['Content-Type'] = 'application/json';
+        if (typeof body === 'string') {
+            this._body = body;
+        }
+        else {
+            this._body = JSON.stringify(body);
+            this._params.headers['Content-Length'] = this._body.length;
+            this._params.headers['Content-Type'] = 'application/json';
+        }
         return this;
     }
     promise() {
@@ -51,12 +61,13 @@ class Request {
                 this._params.path += '?' + querystring.stringify(this._query);
             }
             const r = protos[this._protocol].request(this._params, (res) => {
-                res.text = '';
-                res.on('data', (chunk) => res.text += chunk);
+                const chunks = [];
+                res.on('data', (chunk) => chunks.push(chunk));
                 res.on('end', () => {
                     if (res.statusCode >= 400) {
                         return reject(res);
                     }
+                    res.text = Buffer.concat(chunks).toString();
                     try {
                         res.body = JSON.parse(res.text);
                     }

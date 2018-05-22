@@ -79,6 +79,21 @@ describe('SimplerAgent requests', () => {
             });
     });
 
+    it('should accept a string body', (done) => {
+        nock('https://www.unit-test.com:443')
+            .put('/api/v1')
+            .reply(200, {result: 'YES'});
+
+        request
+            .put('https://www.unit-test.com/api/v1')
+            .send('{"foo": "bar"}')
+            .end((err, resp) => {
+                assert.ok(!err);
+                assert.equal(resp.body.result, 'YES');
+                done(err);
+            });
+    });
+
     it('should "head" resources', (done) => {
         nock('http://www.unit-test.com:80')
             .head('/api/v1')
@@ -137,4 +152,18 @@ describe('SimplerAgent requests', () => {
                 (err) => done(err)
             );
     });
+
+    it('should accept headers as an object', (done) => {
+        const headers = {Authorization: 'my-key', 'X-Other-Header': 'other-value'};
+        nock('http://www.unit-test.com:80', headers).delete('/api/v2').reply(204);
+
+        request
+            .delete('http://www.unit-test.com/api/v2')
+            .set(headers)
+            .then(
+                (resp) => done(),
+                (err) => done(err)
+            );
+    });
+
 });
