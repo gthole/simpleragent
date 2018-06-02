@@ -10,6 +10,12 @@ import urlParse = require('url');
 const protos = {http, https},
       ports = {http: 80, https: 443};
 
+class RequestError extends Error {
+    status: number;
+    statusCode: number;
+    response: http.IncomingMessage;
+}
+
 class Request {
     private _protocol: string;
     private _pathname: string;
@@ -20,7 +26,7 @@ class Request {
     constructor(method: string, url: string) {
         const parsed = urlParse.parse(url);
 
-        this._protocol = parsed.protocol.slice(0, -1);
+        this._protocol = (parsed.protocol || 'http:').slice(0, -1);
         this._pathname = parsed.pathname;
         this._query = querystring.parse(parsed.query);
 
@@ -80,8 +86,12 @@ class Request {
                 res.on('data', (chunk) => chunks.push(chunk));
 
                 res.on('end', () => {
-                    if (res.statusCode >= 400) {
-                        return reject(res);
+                    if (res.statusCode >= 300) {
+                        const err = new RequestError('Bad response from server');
+                        err.status = res.statusCode;
+                        err.statusCode = err.status;
+                        err.response = res;
+                        return reject(err);
                     }
                     res.text = Buffer.concat(chunks).toString();
                     try {
