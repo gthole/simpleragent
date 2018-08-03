@@ -75,37 +75,44 @@ class Request {
         return this;
     }
 
+    end(done): void {
+        this._params.path = this._pathname;
+        if (Object.keys(this._query).length) {
+            this._params.path += '?' + querystring.stringify(this._query);
+        }
+        const r = protos[this._protocol].request(this._params, (res) => {
+            const chunks = [];
+            res.on('data', (chunk) => chunks.push(chunk));
+
+            res.on('end', () => {
+                if (res.statusCode >= 300) {
+                    const err = new RequestError('Bad response from server');
+                    err.status = res.statusCode;
+                    err.statusCode = err.status;
+                    err.response = res;
+                    return done(err);
+                }
+                res.text = Buffer.concat(chunks).toString();
+                try {
+                    res.body = JSON.parse(res.text);
+                } catch (e) {
+                    res.body = null;
+                }
+                done(null, res)
+            });
+        });
+
+        if (this._body.length) r.write(this._body);
+        r.on('error', (err) => done(err));
+        r.end();
+    }
+
     promise(): Promise<any> {
         return new Promise((resolve, reject) => {
-            this._params.path = this._pathname;
-            if (Object.keys(this._query).length) {
-                this._params.path += '?' + querystring.stringify(this._query);
-            }
-            const r = protos[this._protocol].request(this._params, (res) => {
-                const chunks = [];
-                res.on('data', (chunk) => chunks.push(chunk));
-
-                res.on('end', () => {
-                    if (res.statusCode >= 300) {
-                        const err = new RequestError('Bad response from server');
-                        err.status = res.statusCode;
-                        err.statusCode = err.status;
-                        err.response = res;
-                        return reject(err);
-                    }
-                    res.text = Buffer.concat(chunks).toString();
-                    try {
-                        res.body = JSON.parse(res.text);
-                    } catch (e) {
-                        res.body = null;
-                    }
-                    resolve(res)
-                });
+            this.end((err, resp) => {
+                if (err) return reject(err);
+                resolve(resp);
             });
-
-            if (this._body.length) r.write(this._body);
-            r.on('error', reject);
-            r.end();
         });
     }
 
@@ -115,10 +122,6 @@ class Request {
 
     catch(cb): Promise<any> {
         return this.promise().catch(cb);
-    }
-
-    end(done): void {
-        this.promise().then((resp) => done(null, resp)).catch(done);
     }
 }
 
