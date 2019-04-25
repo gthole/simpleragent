@@ -4,22 +4,28 @@
 
 import https = require('https');
 import http = require('http');
+import util = require('util');
 import querystring = require('querystring');
 import urlParse = require('url');
 
 const protos = {http, https},
       ports = {http: 80, https: 443};
 
-class RequestError extends Error {
-    status: number;
-    statusCode: number;
-    response: http.IncomingMessage;
+export class Response extends http.IncomingMessage {
+    body: any;
+    text: string;
 }
 
-class Request {
+export class RequestError extends Error {
+    status: number;
+    statusCode: number;
+    response: Response;
+}
+
+export class Request {
     private _protocol: string;
     private _pathname: string;
-    private _query: any;
+    private _query: querystring.ParsedUrlQuery;
     private _params: {host: string, path: string, port: number, method: string, headers: any};
     private _body: string = '';
 
@@ -41,7 +47,7 @@ class Request {
         }
     }
 
-    auth(username: string, password: string) {
+    auth(username: string, password: string): Request {
         this.set(
             'Authorization',
             'Basic ' + Buffer.from(username + ':' + password).toString('base64')
@@ -49,22 +55,29 @@ class Request {
         return this;
     }
 
-    set(header: string | Object, value?: string) {
-        if (typeof header === 'string') {
-            this._params.headers[header] = value;
+    set(leader: string, value: string): Request;
+    set(leader: {[k: string]: string | number | boolean}): Request;
+    set(leader, value?): Request {
+        if (typeof leader === 'string') {
+            this._params.headers[leader] = value;
         } else {
-            Object.keys(header).forEach((h) => this._params.headers[h] = header[h]);
+            Object.keys(leader).forEach((h) => this._params.headers[h] = leader[h]);
         }
         return this;
     }
 
-    query(arg: Object) {
-        if (typeof arg === 'string') arg = querystring.parse(arg);
-        Object.keys(arg).forEach((k) => this._query[k] = arg[k]);
+    query(arg: string | {[k: string]: string | number | boolean}): Request {
+        let inner: querystring.ParsedUrlQuery;
+        if (typeof arg === 'string') {
+            inner = querystring.parse(arg as string);
+        } else {
+            inner = arg as querystring.ParsedUrlQuery;
+        }
+        Object.keys(inner).forEach((k) => this._query[k] = inner[k]);
         return this;
     }
 
-    send(body: string | Object) {
+    send(body: string | Object): Request {
         if (typeof body === 'string') {
             this._body = body;
         } else {
@@ -75,7 +88,7 @@ class Request {
         return this;
     }
 
-    end(done): void {
+    end(done: (err: RequestError, res?: Response) => void): void {
         this._params.path = this._pathname;
         if (Object.keys(this._query).length) {
             this._params.path += '?' + querystring.stringify(this._query);
@@ -107,50 +120,50 @@ class Request {
         r.end();
     }
 
-    promise(): Promise<any> {
-        return new Promise((resolve, reject) => {
-            this.end((err, resp) => {
-                if (err) return reject(err);
-                resolve(resp);
-            });
-        });
-    }
-
-    then(res, rej): Promise<any> {
-        return this.promise().then(res, rej);
-    }
-
-    catch(cb): Promise<any> {
-        return this.promise().catch(cb);
-    }
-
     /*
-     * Helper functions
+     * Promise-like functions
      */
 
-    static get(url): Request {
-        return new Request('GET', url);
+    promise(): Promise<Response> {
+        return util.promisify((cb) => this.end(cb))() as Promise<Response>;
     }
 
-    static head(url): Request {
-        return new Request('HEAD', url);
+    then(...args): Promise<any> {
+        return this.promise().then(...args);
     }
 
-    static post(url): Request {
-        return new Request('POST', url);
-    }
-
-    static put(url): Request {
-        return new Request('PUT', url);
-    }
-
-    static patch(url): Request {
-        return new Request('PATCH', url);
-    }
-
-    static delete(url): Request {
-        return new Request('DELETE', url);
+    catch(cb): Promise<RequestError | Response> {
+        return this.promise().catch(cb);
     }
 }
 
-export = Request;
+/*
+ * Helper functions
+ */
+
+export function get(url: string): Request {
+    return new Request('GET', url);
+}
+
+export function head(url: string): Request {
+    return new Request('HEAD', url);
+}
+
+export function post(url: string): Request {
+    return new Request('POST', url);
+}
+
+export function put(url: string): Request {
+    return new Request('PUT', url);
+}
+
+export function patch(url: string): Request {
+    return new Request('PATCH', url);
+}
+
+export function del(url: string): Request {
+    return new Request('DELETE', url);
+}
+
+// Patch around typescript declaration file issue
+exports.delete = del;

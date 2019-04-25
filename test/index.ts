@@ -146,7 +146,7 @@ describe('SimplerAgent requests', () => {
         nock('http://www.unit-test.com:80').delete('/api/v1').reply(204);
 
         request
-            .delete('http://www.unit-test.com/api/v1')
+            .del('http://www.unit-test.com/api/v1')
             .then(
                 (resp) => done(),
                 (err) => done(err)
@@ -157,8 +157,8 @@ describe('SimplerAgent requests', () => {
         const headers = {Authorization: 'my-key', 'X-Other-Header': 'other-value'};
         nock('http://www.unit-test.com:80', headers).delete('/api/v2').reply(204);
 
-        request
-            .delete('http://www.unit-test.com/api/v2')
+        // @ts-ignore
+        request.delete('http://www.unit-test.com/api/v2')
             .set(headers)
             .then(
                 (resp) => done(),
