@@ -85,18 +85,18 @@ class Request {
             res.on('data', (chunk) => chunks.push(chunk));
 
             res.on('end', () => {
+                res.text = Buffer.concat(chunks).toString();
+                try {
+                    res.body = JSON.parse(res.text);
+                } catch (e) {
+                    res.body = null;
+                }
                 if (res.statusCode >= 300) {
                     const err = new RequestError('Bad response from server');
                     err.status = res.statusCode;
                     err.statusCode = err.status;
                     err.response = res;
                     return done(err);
-                }
-                res.text = Buffer.concat(chunks).toString();
-                try {
-                    res.body = JSON.parse(res.text);
-                } catch (e) {
-                    res.body = null;
                 }
                 done(null, res)
             });
