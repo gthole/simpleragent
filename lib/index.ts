@@ -24,22 +24,19 @@ export class RequestError extends Error {
 
 export class Request {
     private _protocol: string;
-    private _pathname: string;
     private _query: querystring.ParsedUrlQuery;
-    private _params: {host: string, path: string, port: number, method: string, headers: any};
+    private _params: http.ClientRequestArgs;
     private _body: string = '';
 
     constructor(method: string, url: string) {
         const parsed = urlParse.parse(url);
 
         this._protocol = (parsed.protocol || 'http:').slice(0, -1);
-        this._pathname = parsed.pathname;
         this._query = querystring.parse(parsed.query);
-
         this._params = {
             host: parsed.hostname,
             port: parsed.port || ports[this._protocol],
-            path: '',
+            path: parsed.pathname,
             method: method,
             headers: {
                 'Accept': 'application/json'
@@ -48,10 +45,8 @@ export class Request {
     }
 
     auth(username: string, password: string): Request {
-        this.set(
-            'Authorization',
-            'Basic ' + Buffer.from(username + ':' + password).toString('base64')
-        );
+        const encoded = Buffer.from(username + ':' + password).toString('base64');
+        this.set('Authorization', `Basic ${encoded}`);
         return this;
     }
 
@@ -89,14 +84,12 @@ export class Request {
     }
 
     end(done: (err: RequestError, res?: Response) => void): void {
-        this._params.path = this._pathname;
         if (Object.keys(this._query).length) {
             this._params.path += '?' + querystring.stringify(this._query);
         }
         const r = protos[this._protocol].request(this._params, (res) => {
             const chunks = [];
             res.on('data', (chunk) => chunks.push(chunk));
-
             res.on('end', () => {
                 res.text = Buffer.concat(chunks).toString();
                 try {

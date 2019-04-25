@@ -14,7 +14,7 @@ stuff.
 ### SimplerAgent
 - Can probably do most of what you need for API requests
 - Has no production dependencies
-- Is small: roughly 100 lines of code
+- Is small: roughly 150 lines of code
 - Is typed with Typescript
 - Has good test coverage
 
@@ -27,7 +27,7 @@ $ npm install --save simpleragent
 ```
 
 ### What's Supported?
-Basic JSON requests work just fine:
+SimplerAgent is intended to be used for basic JSON requests:
 
 ```javascript
 const request = require('simpleragent');
@@ -51,9 +51,7 @@ request
     .post('https://api.example.com/v1/fruit')
     .set('Authorization', 'Bearer ' + myApiKey)
     .send({name: 'banana', type: 'peel'})
-    .then((resp) => {
-        // Do something
-    });
+    .then((resp) => console.log(resp.body));
 ```
 
 ### What Isn't Supported?
