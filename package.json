@@ -1,6 +1,6 @@
 {
     "name": "simpleragent",
-    "version": "1.0.3",
+    "version": "1.1.0",
     "author": "gthole@gmail.com",
     "bugs": {
         "url": "https://github.com/gthole/simpleragent/issues"
@@ -15,6 +15,7 @@
     ],
     "license": "MIT",
     "main": "dist/lib/index.js",
+    "types": "dist/lib/index.d.ts",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/gthole/simpleragent.git"

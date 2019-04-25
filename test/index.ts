@@ -110,7 +110,7 @@ describe('SimplerAgent requests', () => {
 
     it('should "post" resources', (done) => {
         nock('http://www.unit-test.com:80', {reqheaders: {
-            'authorization': 'Basic ' + new Buffer('user:pass').toString('base64'),
+            'authorization': 'Basic ' + Buffer.from('user:pass').toString('base64'),
         }}).post('/api/v1')
            .reply(201, {result: true});
 
@@ -165,5 +165,4 @@ describe('SimplerAgent requests', () => {
                 (err) => done(err)
             );
     });
-
 });

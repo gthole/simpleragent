@@ -44,7 +44,7 @@ class Request {
     auth(username: string, password: string) {
         this.set(
             'Authorization',
-            'Basic ' + new Buffer(username + ':' + password).toString('base64')
+            'Basic ' + Buffer.from(username + ':' + password).toString('base64')
         );
         return this;
     }
@@ -123,13 +123,34 @@ class Request {
     catch(cb): Promise<any> {
         return this.promise().catch(cb);
     }
+
+    /*
+     * Helper functions
+     */
+
+    static get(url): Request {
+        return new Request('GET', url);
+    }
+
+    static head(url): Request {
+        return new Request('HEAD', url);
+    }
+
+    static post(url): Request {
+        return new Request('POST', url);
+    }
+
+    static put(url): Request {
+        return new Request('PUT', url);
+    }
+
+    static patch(url): Request {
+        return new Request('PATCH', url);
+    }
+
+    static delete(url): Request {
+        return new Request('DELETE', url);
+    }
 }
 
-export = {
-    get: (url) => new Request('GET', url),
-    head: (url) => new Request('HEAD', url),
-    post: (url) => new Request('POST', url),
-    put: (url) => new Request('PUT', url),
-    patch: (url) => new Request('PATCH', url),
-    delete: (url) => new Request('DELETE', url)
-};
+export = Request;
