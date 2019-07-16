@@ -56,14 +56,14 @@ request
     .then((resp) => console.log(resp.body));
 
 // Errors are thrown for non-2xx responses, with the status code
-// and response body on the thrown error
+// and response object on the thrown error
 try {
   const resp = await request
     .get('http://www.example.com/api/return-400')
     .promise();
 } catch (e) {
     console.log(e.statusCode);
-    console.log(e.text);
+    console.log(e.response.body);
 }
 ```
 
