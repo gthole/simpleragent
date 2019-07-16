@@ -41,10 +41,12 @@ request
         // Do something
     });
 
-// Promises, within an async function
+// Promises, within an async function.  String copy of the response body
+// is available in the "text" attribute of the response.
 const resp = await request
     .get('http://www.example.com/foo?bar=baz')
     .promise();
+console.log(resp.text);
 
 // Sending JSON bodies, HTTPS, and setting headers
 request
@@ -52,6 +54,17 @@ request
     .set('Authorization', 'Bearer ' + myApiKey)
     .send({name: 'banana', type: 'peel'})
     .then((resp) => console.log(resp.body));
+
+// Errors are thrown for non-2xx responses, with the status code
+// and response body on the thrown error
+try {
+  const resp = await request
+    .get('http://www.example.com/api/return-400')
+    .promise();
+} catch (e) {
+    console.log(e.statusCode);
+    console.log(e.text);
+}
 ```
 
 ### What Isn't Supported?
