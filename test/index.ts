@@ -5,152 +5,126 @@ import request = require('../lib/');
 describe('SimplerAgent requests', () => {
     afterEach(() => nock.cleanAll());
 
-    it('should "get" resources', (done) => {
+    it('should "get" resources', async () => {
         nock('http://www.unit-test.com:80')
             .get('/api/v1')
             .reply(200, {result: 'OK'});
 
-        request
-            .get('http://www.unit-test.com/api/v1')
-            .end((err, resp) => {
-                assert.ok(!err);
-                assert.equal(resp.body.result, 'OK');
-                done(err);
-            });
+        const resp = await request.get('http://www.unit-test.com/api/v1');
+        assert.equal(resp.body.result, 'OK');
     });
 
-    it('should "get" resources with search parameters', (done) => {
+    it('should "get" resources with search parameters', async () => {
         nock('http://www.unit-test.com:80')
             .get('/api/v1?foo=bar')
             .reply(200, {result: 'OK'});
 
-        request
+        const resp = await request
             .get('http://www.unit-test.com/api/v1')
-            .query({foo: 'bar'})
-            .end((err, resp) => {
-                assert.ok(!err);
-                assert.equal(resp.body.result, 'OK');
-                done(err);
-            });
+            .query({foo: 'bar'});
+
+        assert.equal(resp.body.result, 'OK');
     });
 
-    it('should return errors for 400s', (done) => {
+    it('should return errors for 400s', async () => {
         nock('http://www.unit-test.com:80')
             .get('/api/v1?foo=Bulstrode')
             .reply(400, {result: 'Bad request'});
 
-        request
-            .get('http://www.unit-test.com/api/v1')
-            .query('foo=Bulstrode')
-            .end((err, resp) => {
-                assert.ok(err);
-                assert.equal(err.statusCode, 400);
-                done();
-            });
+        try {
+            await request
+                .get('http://www.unit-test.com/api/v1')
+                .query('foo=Bulstrode');
+        } catch (err) {
+            assert.equal(err.statusCode, 400);
+            return;
+        }
+        throw new Error('Did not throw an error');
     });
 
-    it('should return errors for 500s', (done) => {
+    it('should return errors for 500s', async () => {
         nock('http://www.unit-test.com:80')
             .get('/api/v1?foo=Bulstrode')
             .reply(500, {result: 'Raffles!'});
 
-        request
-            .get('http://www.unit-test.com/api/v1')
-            .query('foo=Bulstrode')
-            .catch((err) => {
-                assert.ok(err);
-                assert.equal(err.statusCode, 500);
-                done();
-            });
+        try {
+            await request
+                .get('http://www.unit-test.com/api/v1')
+                .query('foo=Bulstrode');
+        } catch (err) {
+            assert.ok(err);
+            assert.equal(err.statusCode, 500);
+            return;
+        }
+        throw new Error('Did not throw an error');
     });
 
-    it('should "put" resources', (done) => {
+    it('should "put" resources', async () => {
         nock('https://www.unit-test.com:443')
             .put('/api/v1')
             .reply(200, {result: 'OK'});
 
-        request
+        const resp = await request
             .put('https://www.unit-test.com/api/v1')
-            .send({first: 'Dorothea', last: 'Brook'})
-            .end((err, resp) => {
-                assert.ok(!err);
-                assert.equal(resp.body.result, 'OK');
-                done(err);
-            });
+            .send({first: 'Dorothea', last: 'Brook'});
+
+        assert.equal(resp.body.result, 'OK');
     });
 
-    it('should accept a string body', (done) => {
+    it('should accept a string body', async () => {
         nock('https://www.unit-test.com:443')
             .put('/api/v1')
             .reply(200, {result: 'YES'});
 
-        request
+        const resp = await request
             .put('https://www.unit-test.com/api/v1')
-            .send('{"foo": "bar"}')
-            .end((err, resp) => {
-                assert.ok(!err);
-                assert.equal(resp.body.result, 'YES');
-                done(err);
-            });
+            .send('{"foo": "bar"}');
+
+        assert.equal(resp.body.result, 'YES');
     });
 
-    it('should "head" resources', (done) => {
+    it('should "head" resources', async () => {
         nock('http://www.unit-test.com:80')
             .head('/api/v1')
             .reply(200);
 
-        request
-            .head('http://www.unit-test.com/api/v1')
-            .end((err, resp) => {
-                assert.ok(!err);
-                assert.ok(!resp.body);
-                done(err);
-            });
+        const resp = await request.head('http://www.unit-test.com/api/v1');
+        assert.ok(!resp.body);
     });
 
-    it('should "post" resources', (done) => {
+    it('should "post" resources', async () => {
         nock('http://www.unit-test.com:80', {reqheaders: {
             'authorization': 'Basic ' + Buffer.from('user:pass').toString('base64'),
         }}).post('/api/v1')
            .reply(201, {result: true});
 
-        request
+        const resp = await request
             .post('http://www.unit-test.com/api/v1')
             .auth('user', 'pass')
-            .send({first: 'Tertius', last: 'Lydgate'})
-            .end((err, resp) => {
-                assert.ok(!err);
-                assert.equal(resp.body.result, true);
-                done(err);
-            });
+            .send({first: 'Tertius', last: 'Lydgate'});
+
+        assert.equal(resp.body.result, true);
     });
 
-    it('should "patch" resources', (done) => {
+    it('should "patch" resources', async () => {
         nock('http://www.unit-test.com:80', {reqheaders: {
             'authorization': 'Bearer abc123'
         }}).patch('/api/v1')
            .reply(202, {result: false});
 
-        request
+        const resp = await request
             .patch('http://www.unit-test.com/api/v1')
             .set('Authorization', 'Bearer abc123')
-            .send({first: 'Will', last: 'Ladislaw'})
-            .end((err, resp) => {
-                assert.ok(!err);
-                assert.equal(resp.body.result, false);
-                done(err);
-            });
+            .send({first: 'Will', last: 'Ladislaw'});
+
+        assert.equal(resp.body.result, false);
     });
 
-    it('should "delete" resources', (done) => {
+    it('should "delete" resources', async () => {
         nock('http://www.unit-test.com:80').delete('/api/v1').reply(204);
 
-        request
-            .del('http://www.unit-test.com/api/v1')
-            .then(
-                (resp) => done(),
-                (err) => done(err)
-            );
+        const resp = await request.del('http://www.unit-test.com/api/v1');
+        assert.equal(resp.statusCode, 204);
     });
 
     it('should accept headers as an object', (done) => {
@@ -160,9 +134,10 @@ describe('SimplerAgent requests', () => {
         // @ts-ignore
         request.delete('http://www.unit-test.com/api/v2')
             .set(headers)
-            .then(
-                (resp) => done(),
-                (err) => done(err)
-            );
+            .end((err, resp) => {
+                assert.ok(!err);
+                assert.equal(resp.statusCode, 204);
+                done();
+            });
     });
 });

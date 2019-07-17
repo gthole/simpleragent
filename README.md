@@ -27,45 +27,52 @@ $ npm install --save simpleragent
 ```
 
 ### What's Supported?
-SimplerAgent is intended to be used for basic JSON requests:
+SimplerAgent is intended to be used for basic JSON requests.
+
+It's calls return a `Promise-like` object that plays well with `async`/`await`.
 
 ```javascript
 const request = require('simpleragent');
 
-// Auth and query strings
-request
+// Promises first, within an async function
+// Easily set headers and query parameters
+const resp = await request
     .get('http://www.example.com')
     .auth('my-user', 'pass')
-    .query({name: 'bananas'})
-    .end((err, resp) => {
-        // Do something
-    });
+    .query({name: 'bananas'});
 
-// Promises, within an async function.  String copy of the response body
-// is available in the "text" attribute of the response.
-const resp = await request
-    .get('http://www.example.com/foo?bar=baz')
-    .promise();
+// The response body string is available in the "text" attribute of the response.
 console.log(resp.text);
 
-// Sending JSON bodies, HTTPS, and setting headers
+// The "body" attribute contains the JSON-parsed body (or null if parsing failed).
+console.log(resp.body);
+
+// Sending JSON bodies, HTTPS, and setting headers, using callbacks
 request
     .post('https://api.example.com/v1/fruit')
     .set('Authorization', 'Bearer ' + myApiKey)
     .send({name: 'banana', type: 'peel'})
-    .then((resp) => console.log(resp.body));
+    .end((end, resp) => {
+        // Do something
+    });
 
 // Errors are thrown for non-2xx responses, with the status code
 // and response object on the thrown error
 try {
-  const resp = await request
-    .get('http://www.example.com/api/return-400')
-    .promise();
+    const resp = await request.get('http://www.example.com/api/return-400');
 } catch (e) {
     console.log(e.statusCode);
     console.log(e.response.body);
 }
 ```
+
+Methods supported:
+- `get`
+- `head`
+- `post`
+- `put`
+- `patch`
+- `del`
 
 ### What Isn't Supported?
 Everything else.

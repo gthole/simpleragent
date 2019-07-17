@@ -22,7 +22,7 @@ export class RequestError extends Error {
     response: Response;
 }
 
-export class Request {
+export class Request implements PromiseLike<Response> {
     private _protocol: string;
     private _query: querystring.ParsedUrlQuery;
     private _params: http.ClientRequestArgs;
@@ -121,8 +121,8 @@ export class Request {
         return util.promisify((cb) => this.end(cb))() as Promise<Response>;
     }
 
-    then(...args): Promise<any> {
-        return this.promise().then(...args);
+    then(resolve: (value: Response) => void, reject: (err: RequestError) => void): Promise<any> {
+        return this.promise().then(resolve, reject);
     }
 
     catch(cb): Promise<RequestError | Response> {
