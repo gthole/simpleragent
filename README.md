@@ -29,7 +29,7 @@ $ npm install --save simpleragent
 ### What's Supported?
 SimplerAgent is intended to be used for basic JSON requests.
 
-It's calls return a `Promise-like` object that plays well with `async`/`await`.
+Calls return a `Promise-like` object that plays well with `async`/`await`.
 
 ```javascript
 const request = require('simpleragent');
@@ -41,10 +41,12 @@ const resp = await request
     .auth('my-user', 'pass')
     .query({name: 'bananas'});
 
-// The response body string is available in the "text" attribute of the response.
+// The response body string is available in the "text" attribute of
+// the response.
 console.log(resp.text);
 
-// The "body" attribute contains the JSON-parsed body (or null if parsing failed).
+// The "body" attribute contains the JSON-parsed body (or null if
+// parsing failed).
 console.log(resp.body);
 
 // Sending JSON bodies, HTTPS, and setting headers, using callbacks
@@ -59,7 +61,7 @@ request
 // Errors are thrown for non-2xx responses, with the status code
 // and response object on the thrown error
 try {
-    const resp = await request.get('http://www.example.com/api/return-400');
+    const resp = await request.get('http://www.example.com/return-400');
 } catch (e) {
     console.log(e.statusCode);
     console.log(e.response.body);
