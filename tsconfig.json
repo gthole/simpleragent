@@ -12,10 +12,6 @@
             "es7"
         ]
     },
-    "files": [
-        "./node_modules/@types/node/index.d.ts",
-        "./node_modules/@types/mocha/index.d.ts"
-    ],
     "include": [
         "lib/**/*",
         "test/**/*"
