@@ -4,7 +4,6 @@
 
 import https = require('https');
 import http = require('http');
-import util = require('util');
 import querystring = require('querystring');
 import urlParse = require('url');
 
@@ -83,43 +82,41 @@ export class Request implements PromiseLike<Response> {
         return this;
     }
 
-    end(done: (err: RequestError, res?: Response) => void): void {
-        if (Object.keys(this._query).length) {
-            this._params.path += '?' + querystring.stringify(this._query);
-        }
-        const r = protos[this._protocol].request(this._params, (res) => {
-            const chunks = [];
-            res.on('data', (chunk) => chunks.push(chunk));
-            res.on('end', () => {
-                res.text = Buffer.concat(chunks).toString();
-                try {
-                    res.body = JSON.parse(res.text);
-                } catch (e) {
-                    res.body = null;
-                }
-                if (res.statusCode >= 300) {
-                    const err = new RequestError('Bad response from server');
-                    err.status = res.statusCode;
-                    err.statusCode = err.status;
-                    err.response = res;
-                    return done(err);
-                }
-                done(null, res)
+    promise(): Promise<Response> {
+        return new Promise<Response>((resolve, reject) => {
+            if (Object.keys(this._query).length) {
+                this._params.path += '?' + querystring.stringify(this._query);
+            }
+            const r = protos[this._protocol].request(this._params, (res) => {
+                const chunks = [];
+                res.on('data', (chunk) => chunks.push(chunk));
+                res.on('end', () => {
+                    res.text = Buffer.concat(chunks).toString();
+                    try {
+                        res.body = JSON.parse(res.text);
+                    } catch (e) {
+                        res.body = null;
+                    }
+                    if (res.statusCode >= 300) {
+                        const err = new RequestError('Bad response from server');
+                        err.status = res.statusCode;
+                        err.statusCode = err.status;
+                        err.response = res;
+                        return reject(err);
+                    }
+                    resolve(res)
+                });
             });
-        });
 
-        if (this._body.length) r.write(this._body);
-        r.on('error', (err) => done(err));
-        r.end();
+            if (this._body.length) r.write(this._body);
+            r.on('error', (err) => reject(err));
+            r.end();
+        });
     }
 
     /*
      * Promise-like functions
      */
-
-    promise(): Promise<Response> {
-        return util.promisify((cb) => this.end(cb))() as Promise<Response>;
-    }
 
     then(resolve: (value: Response) => void, reject: (err: RequestError) => void): Promise<any> {
         return this.promise().then(resolve, reject);
@@ -127,6 +124,17 @@ export class Request implements PromiseLike<Response> {
 
     catch(cb): Promise<RequestError | Response> {
         return this.promise().catch(cb);
+    }
+
+    /*
+     * Callback support
+     */
+
+    end(done: (err: RequestError, res?: Response) => void): void {
+        this.then(
+            (res: Response) => done(null, res),
+            (err: RequestError) => done(err)
+        );
     }
 }
 
