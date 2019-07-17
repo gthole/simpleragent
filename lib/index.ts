@@ -118,7 +118,7 @@ export class Request implements PromiseLike<Response> {
      * Promise-like functions
      */
 
-    then(resolve: (value: Response) => void, reject: (err: RequestError) => void): Promise<any> {
+    then(resolve: ((value: Response) => void) | undefined | null, reject: ((err: RequestError) => void) | undefined | null): Promise<any> {
         return this.promise().then(resolve, reject);
     }
 
