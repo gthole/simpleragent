@@ -2,7 +2,7 @@ import assert = require('assert');
 import nock = require('nock');
 import request = require('../lib/');
 
-describe('SimplerAgent requests', () => {
+describe('SimplerAgent Request', () => {
     afterEach(() => nock.cleanAll());
 
     it('should "get" resources', async () => {

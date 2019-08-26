@@ -76,6 +76,34 @@ Methods supported:
 - `patch`
 - `del`
 
+### Client Objects
+Clients reduce the overall boilerplate required for each request.  If you have
+a client that makes multiple calls to an API, you can omit the base url and
+headers.
+
+The Client constructor takes a path prefix as its first argument, and an
+optional headers object as its second argument.  Then use the client as you
+would simpleragent, but without all the extra code.
+
+```javascript
+const Client = request('simpleragent/client');
+
+const client = new Client(
+    'https://www.example.com/api/v1',
+    {Authorization: 'Bearer ' + process.env.SOME_API_KEY}
+);
+
+async function get() {
+    const resp = await client.get('/resource').query({foo: 'bar'});
+    return resp.body;
+}
+
+async function post(payload) {
+    const resp = await client.post('/resource').send(payload);
+    return resp.body.id;
+}
+```
+
 ### What Isn't Supported?
 Everything else.
 

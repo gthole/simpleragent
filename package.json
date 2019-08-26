@@ -1,6 +1,6 @@
 {
     "name": "simpleragent",
-    "version": "1.3.3",
+    "version": "1.5.0",
     "author": "gthole@gmail.com",
     "bugs": {
         "url": "https://github.com/gthole/simpleragent/issues"
@@ -21,6 +21,7 @@
         "url": "git+https://github.com/gthole/simpleragent.git"
     },
     "scripts": {
+        "precompile": "rm -rf dist",
         "compile": "tsc",
         "pretest": "npm run compile",
         "test": "mocha dist/test"
