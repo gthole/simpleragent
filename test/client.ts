@@ -103,6 +103,32 @@ describe('SimplerAgent Client', () => {
         assert.equal(resp.body.result, true);
     });
 
+    it('can send without a path suffix', async () => {
+        nock('http://www.unit-test.com:80')
+            .patch('/api/v1')
+            .reply(202, {result: false});
+
+        const client = new Client('http://www.unit-test.com/api/v1');
+
+        const resp = await client
+            .patch()
+            .send({first: 'Will', last: 'Ladislaw'});
+        assert.equal(resp.body.result, false);
+    });
+
+    it('can construct client with setter', async () => {
+        nock('http://www.unit-test.com:80', {reqheaders: {
+            'authorization': 'Bearer abc123'
+        }}).patch('/api/v1')
+           .reply(202, {result: false});
+
+        const client = new Client('http://www.unit-test.com/api')
+                           .set('Authorization', 'Bearer abc123');
+
+        const resp = await client.patch('/v1').send({first: 'Will', last: 'Ladislaw'});
+        assert.equal(resp.body.result, false);
+    });
+
     it('should "patch" resources', async () => {
         nock('http://www.unit-test.com:80', {reqheaders: {
             'authorization': 'Bearer abc123'

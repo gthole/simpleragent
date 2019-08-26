@@ -9,6 +9,17 @@ class Client {
         this.headers = headers || {};
     }
 
+    set(leader: string, value: string): Client;
+    set(leader: {[k: string]: string | number | boolean}): Client;
+    set(leader, value?): Client {
+        if (typeof leader === 'string') {
+            this.headers[leader] = value;
+        } else {
+            Object.keys(leader).forEach((h) => this.headers[h] = leader[h]);
+        }
+        return this;
+    }
+
     get(path?: string): Request {
         return new Request('GET', this.prefix + (path || '')).set(this.headers);
     }
