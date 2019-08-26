@@ -2,7 +2,7 @@
 A NodeJS simplified version of [SuperAgent.js](http://visionmedia.github.io/superagent/)
 for making JSON HTTP requests.
 
-### Why?
+## Why?
 Superagent is great!  It lets you structure your requests cleanly and programmatically.
 
 But it's also pretty heavy - it contains lots of features that aren't necessary
@@ -11,14 +11,14 @@ the time.  If I'm bundling up a small Lambda function, it's better to have a
 super small library to provide the same functionality without all the extra
 stuff.
 
-### SimplerAgent
+## SimplerAgent
 - Can probably do most of what you need for API requests
 - Has no production dependencies
 - Is small: roughly 150 lines of code
 - Is typed with Typescript
 - Has good test coverage
 
-### Installation
+## Installation
 
 Easy enough:
 
@@ -26,7 +26,7 @@ Easy enough:
 $ npm install --save simpleragent
 ```
 
-### What's Supported?
+## What's Supported?
 SimplerAgent is intended to be used for basic JSON requests.
 
 Calls return a `Promise-like` object that plays well with `async`/`await`.
@@ -76,22 +76,20 @@ Methods supported:
 - `patch`
 - `del`
 
-### Client Objects
+## Client Objects
 Clients reduce the overall boilerplate required for each request.  If you have
 a client that makes multiple calls to an API, you can omit the base url and
 headers.
 
-The Client constructor takes a path prefix as its first argument, and an
-optional headers object as its second argument.  Then use the client as you
-would simpleragent, but without all the extra code.
+The Client constructor takes a path prefix as an argument. You can add or update
+headers with the `set` method. Then use the client as you would `simpleragent`,
+but without all the extra code.
 
 ```javascript
 const Client = request('simpleragent/client');
 
-const client = new Client(
-    'https://www.example.com/api/v1',
-    {Authorization: 'Bearer ' + process.env.SOME_API_KEY}
-);
+const client = new Client('https://www.example.com/api/v1');
+client.set('Authorization', 'Bearer ' + process.env.SOME_API_KEY);
 
 async function get() {
     const resp = await client.get('/resource').query({foo: 'bar'});
@@ -104,7 +102,7 @@ async function post(payload) {
 }
 ```
 
-### What Isn't Supported?
+## What Isn't Supported?
 Everything else.
 
 **Features that are left out:**
