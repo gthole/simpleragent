@@ -86,9 +86,9 @@ headers with the `set` method. Then use the client as you would `simpleragent`,
 but without all the extra code.
 
 ```javascript
-const Client = request('simpleragent/client');
+import { Client } from 'simpleragent';
 
-const client = new Client('https://www.example.com/api/v1');
+const client = new request.Client('https://www.example.com/api/v1');
 client.set('Authorization', 'Bearer ' + process.env.SOME_API_KEY);
 
 async function get() {
