@@ -85,7 +85,12 @@ class Request implements PromiseLike<Response> {
                         res.body = null;
                     }
                     if (res.statusCode >= 300) {
-                        const err = new RequestError(`Bad response from server. statusCode=${res.statusCode}\n${res.text}`);
+                        const attrs = [
+                            `host=${this._params.host}`,
+                            `path=${this._params.path}`,
+                            `statusCode=${res.statusCode}`
+                        ];
+                        const err = new RequestError(`Bad response from server. ${attrs.join(' ')}\n${res.text}`);
                         err.status = res.statusCode;
                         err.statusCode = err.status;
                         err.response = res;
