@@ -118,6 +118,10 @@ class Request implements PromiseLike<Response> {
         return this.promise().catch(cb);
     }
 
+    finally(cb): Promise<RequestError | Response> {
+        return this.promise().finally(cb);
+    }
+
     /*
      * Callback support
      */
