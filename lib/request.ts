@@ -2,19 +2,21 @@ import https = require('https');
 import http = require('http');
 import querystring = require('querystring');
 import urlParse = require('url');
+import BaseClient = require('./base-client');
 import RequestError = require('./request-error');
 import Response = require('./response');
 
 const protos = {http, https},
       ports = {http: 80, https: 443};
 
-class Request implements PromiseLike<Response> {
+class Request extends BaseClient implements PromiseLike<Response> {
     private _protocol: string;
     private _query: querystring.ParsedUrlQuery;
     private _params: http.ClientRequestArgs;
     private _body: string = '';
 
     constructor(method: string, url: string) {
+        super();
         const parsed = urlParse.parse(url);
 
         this._protocol = (parsed.protocol || 'http:').slice(0, -1);
@@ -24,27 +26,7 @@ class Request implements PromiseLike<Response> {
             port: parsed.port || ports[this._protocol],
             path: parsed.pathname,
             method: method,
-            headers: {
-                'Accept': 'application/json'
-            }
         }
-    }
-
-    auth(username: string, password: string): Request {
-        const encoded = Buffer.from(username + ':' + password).toString('base64');
-        this.set('Authorization', `Basic ${encoded}`);
-        return this;
-    }
-
-    set(leader: string, value: string): Request;
-    set(leader: {[k: string]: string | number | boolean}): Request;
-    set(leader, value?): Request {
-        if (typeof leader === 'string') {
-            this._params.headers[leader] = value;
-        } else {
-            Object.keys(leader).forEach((h) => this._params.headers[h] = leader[h]);
-        }
-        return this;
     }
 
     query(arg: string | {[k: string]: string | number | boolean}): Request {
@@ -63,17 +45,18 @@ class Request implements PromiseLike<Response> {
             this._body = body;
         } else {
             this._body = JSON.stringify(body);
-            this._params.headers['Content-Length'] = this._body.length;
-            this._params.headers['Content-Type'] = 'application/json';
+            this._headers['Content-Length'] = this._body.length;
+            this._headers['Content-Type'] = 'application/json';
         }
         return this;
     }
 
-    promise(): Promise<Response> {
+    attempt(): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
             if (Object.keys(this._query).length) {
                 this._params.path += '?' + querystring.stringify(this._query);
             }
+            this._params.headers = this._headers;
             const r = protos[this._protocol].request(this._params, (res) => {
                 const chunks = [];
                 res.on('data', (chunk) => chunks.push(chunk));
@@ -104,6 +87,28 @@ class Request implements PromiseLike<Response> {
             r.on('error', (err) => reject(err));
             r.end();
         });
+    }
+
+    async promise(): Promise<Response> {
+        let attempts = 0;
+        while (true) {
+            try {
+                return await this.attempt();
+            } catch (e) {
+                if (e.statusCode >= 500 && this._retry.retries > attempts) {
+                    attempts += 1;
+                    if (this._retry.delay) {
+                        let wait = this._retry.delay;
+                        if (this._retry.backoff) {
+                            wait *= this._retry.backoff ** (attempts - 1);
+                        }
+                        await new Promise(r => setTimeout(r, wait));
+                    }
+                } else {
+                    throw e;
+                }
+            }
+        }
     }
 
     /*

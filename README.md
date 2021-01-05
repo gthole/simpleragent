@@ -14,7 +14,7 @@ stuff.
 ## SimplerAgent
 - Can probably do most of what you need for API requests
 - Has no production dependencies
-- Is small: roughly 150 lines of code
+- Is small: roughly 300 lines of code
 - Is typed with Typescript
 - Has good test coverage
 
@@ -32,7 +32,13 @@ SimplerAgent is intended to be used for basic JSON requests.
 Calls return a `Promise-like` object that plays well with `async`/`await`.
 
 ```javascript
+// Importing with require
+const { request, Response } = require('simpleragent');
 const request = require('simpleragent');
+
+// Importing with Typescript
+import { request, Response, ResponseError } from 'simpleragent';
+import { get, put } from 'simpleragent';
 
 // Promises first, within an async function
 // Easily set headers and query parameters
@@ -66,6 +72,23 @@ try {
     console.log(e.statusCode);
     console.log(e.response.body);
 }
+
+// A simple policy to retry 5xx errors five times
+const resp = await request
+    .get('http://www.example.com/return-500')
+    .retry(5);
+
+// A policy with optional delay and optional exponential backoff
+try {
+    await request
+        .get('http://www.example.com/return-503')
+        .retry({retries: 3, delay: 100, backoff: 2});
+} catch (e) {
+    // 5xx errors are thrown if retries are exhausted
+    // 4xx errors are thrown without retrying
+    console.log(e.statusCode);
+}
+
 ```
 
 Methods supported:
@@ -89,7 +112,15 @@ but without all the extra code.
 import { Client } from 'simpleragent';
 
 const client = new request.Client('https://www.example.com/api/v1');
-client.set('Authorization', 'Bearer ' + process.env.SOME_API_KEY);
+
+// Set a header to be sent with all requests
+client.set('x-api-key', process.env.SOME_API_KEY);
+
+// Add a basic auth Authorization header
+client.auth(username, password);
+
+// Set a retry policy that will be applied to all requests
+client.retry({retries: 3, delay: 200});
 
 async function get() {
     const resp = await client.get('/resource').query({foo: 'bar'});
@@ -111,7 +142,6 @@ Everything else.
 - Sessions: Cookies not saved
 - Progress Tracking: Don't use it for big uploads
 - Browser version: Node only
-- Retrying request: Do that manually if you want it
 - TLS options: Maybe will add these later
 - Aborts / Timeouts
 - Following Redirects

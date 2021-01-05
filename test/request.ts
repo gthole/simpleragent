@@ -140,4 +140,87 @@ describe('SimplerAgent Request', () => {
                 done();
             });
     });
+
+    it('should retry without a delay', async () => {
+        let attempts = 0;
+        nock('http://www.unit-test.com:80')
+            .get('/api/v1')
+            .times(5)
+            .reply((uri, body) => {
+                attempts += 1;
+                if (attempts === 5) {
+                    return [200, {}];
+                }
+                return [500, {}];
+            });
+
+        const resp = await request
+            .get('http://www.unit-test.com/api/v1')
+            .retry(4);
+
+        assert.equal(resp.statusCode, 200);
+    });
+
+    it('should throw an error if it runs out of retries', async () => {
+        nock('http://www.unit-test.com:80')
+            .get('/api/v1')
+            .times(6)
+            .reply(503);
+
+        try {
+            await request
+                .get('http://www.unit-test.com/api/v1')
+                .retry(5);
+        } catch (e) {
+            assert.equal(e.statusCode, 503);
+            return;
+        }
+        throw new Error('Did not throw an error');
+    });
+
+    it('should retry with a delay', async () => {
+        const start = Date.now();
+        let attempts = 0;
+        nock('http://www.unit-test.com:80')
+            .post('/api/v1')
+            .times(3)
+            .reply(() => {
+                attempts += 1;
+                if (attempts === 3) {
+                    return [200, {}];
+                }
+                return [500, {}];
+            });
+
+        const resp = await request
+            .post('http://www.unit-test.com/api/v1')
+            .retry({retries: 2, delay: 100});
+
+        assert.equal(resp.statusCode, 200);
+        assert(Date.now() - start > 200);
+    });
+
+    it('should retry with a backoff', async () => {
+        const start = Date.now();
+        let attempts = 0;
+        nock('http://www.unit-test.com:80')
+            .put('/api/v1')
+            .times(4)
+            .reply(() => {
+                attempts += 1;
+                if (attempts === 4) {
+                    return [200, {}];
+                }
+                return [500, {}];
+            });
+
+        const resp = await request
+            .put('http://www.unit-test.com/api/v1')
+            .retry({retries: 3, delay: 100, backoff: 2});
+
+        // 100 + 200 + 400
+        assert.equal(resp.statusCode, 200);
+        assert(Date.now() - start > 700);
+    });
+
 });

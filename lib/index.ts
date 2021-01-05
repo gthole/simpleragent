@@ -35,7 +35,10 @@ function del(url: string): Request {
     return new Request('DELETE', url);
 }
 
+const request = {get, head, post, put, patch, del};
+
 export {
+    request,
     Client,
     RequestError,
     Request,
