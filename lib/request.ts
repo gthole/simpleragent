@@ -77,7 +77,7 @@ class Request extends BaseClient implements PromiseLike<Response> {
 
             if (this._body.length) r.write(this._body);
             r.on('error', (err) => {
-                const rErr = new RequestError('Connection Error', this._params.host, this._params.path);
+                const rErr = new RequestError('Connection Error: ' + err.message, this._params.host, this._params.path);
                 reject(rErr)
             });
             r.end();

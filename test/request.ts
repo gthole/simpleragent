@@ -63,6 +63,26 @@ describe('SimplerAgent Request', () => {
         throw new Error('Did not throw an error');
     });
 
+    it('should return connection errors', async () => {
+        try {
+            await request
+                .get('http://alskdfjaerhgliualkajsfawehfjklsfjka.com/api/v1');
+        } catch (err) {
+            assert.equal(err.statusCode, undefined);
+            assert.equal(
+                err.message,
+                'Connection Error: getaddrinfo ' +
+                'ENOTFOUND alskdfjaerhgliualkajsfawehfjklsfjka.com ' +
+                'host=alskdfjaerhgliualkajsfawehfjklsfjka.com:80 ' +
+                'path=/api/v1 ' +
+                'status=none'
+            );
+            return;
+        }
+        throw new Error('Did not throw an error');
+    });
+
+
     it('should "put" resources', async () => {
         nock('https://www.unit-test.com:443')
             .put('/api/v1')
