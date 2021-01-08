@@ -37,6 +37,10 @@ describe('SimplerAgent Request', () => {
                 .query('foo=Bulstrode');
         } catch (err) {
             assert.equal(err.statusCode, 400);
+            assert.equal(
+                err.message,
+                'Bad response from server. host=www.unit-test.com:80 path=/api/v1?foo=Bulstrode status=400\n{"result":"Bad request"}'
+            );
             return;
         }
         throw new Error('Did not throw an error');

@@ -1,3 +1,4 @@
+.tmp/
 lib/
 test/
 dist/test

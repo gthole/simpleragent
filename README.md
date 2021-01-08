@@ -31,19 +31,23 @@ SimplerAgent is intended to be used for basic JSON requests.
 
 Calls return a `Promise-like` object that plays well with `async`/`await`.
 
+### Importing
+Import with require:
+
 ```javascript
-// Importing with require
 const { request, Response } = require('simpleragent');
 const request = require('simpleragent');
-
-// Importing with Typescript
+```
+or with `import` in Typescript
+```
 import { request, Response, ResponseError } from 'simpleragent';
 import { get, put } from 'simpleragent';
+```
 
-// Promises first, within an async function
-// Easily set headers and query parameters
-const resp = await request
-    .get('http://www.example.com')
+### Making Requests
+Requests are Promises-first and can be await'ed:
+```javascript
+const resp = await request.get('https://www.example.com')
     .auth('my-user', 'pass')
     .query({name: 'bananas'});
 
@@ -54,25 +58,45 @@ console.log(resp.text);
 // The "body" attribute contains the JSON-parsed body (or null if
 // parsing failed).
 console.log(resp.body);
+```
 
+You can also use callbacks with the `end` method:
+
+```javascript
+request.get('http://www.example.com').end((err, resp) => ... );
+```
+
+### Sending Payloads
+
+Drop JSON into the `send` method. Don't worry about setting the Content-Type,
+it's set to `application/json` for you.
+
+```
 // Sending JSON bodies, HTTPS, and setting headers, using callbacks
-request
+await request
     .post('https://api.example.com/v1/fruit')
     .set('Authorization', 'Bearer ' + myApiKey)
-    .send({name: 'banana', type: 'peel'})
-    .end((end, resp) => {
-        // Do something
-    });
+    .send({name: 'banana', type: 'peel'});
+```
 
-// Errors are thrown for non-2xx responses, with the status code
-// and response object on the thrown error
+### Error Handling
+
+Errors are thrown for non-2xx responses, with the status code and response
+object on the thrown error
+
+```
 try {
     const resp = await request.get('http://www.example.com/return-400');
 } catch (e) {
     console.log(e.statusCode);
     console.log(e.response.body);
 }
+```
 
+### Retrying
+Simpleragent will auto-retry 5xx errors if you set a `retry` policy.
+
+```javascript
 // A simple policy to retry 5xx errors five times
 const resp = await request
     .get('http://www.example.com/return-500')
@@ -88,10 +112,13 @@ try {
     // 4xx errors are thrown without retrying
     console.log(e.statusCode);
 }
-
 ```
 
-Methods supported:
+`delay` is the number of milliseconds to wait between retries, and `backoff` is
+a multiplicative factor to apply to the `delay` with each retry.
+
+### Methods Supported
+
 - `get`
 - `head`
 - `post`

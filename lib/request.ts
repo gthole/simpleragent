@@ -68,23 +68,18 @@ class Request extends BaseClient implements PromiseLike<Response> {
                         res.body = null;
                     }
                     if (res.statusCode >= 300) {
-                        const attrs = [
-                            `host=${this._params.host}`,
-                            `path=${this._params.path}`,
-                            `statusCode=${res.statusCode}`
-                        ];
-                        const err = new RequestError(`Bad response from server. ${attrs.join(' ')}\n${res.text}`);
-                        err.status = res.statusCode;
-                        err.statusCode = err.status;
-                        err.response = res;
-                        return reject(err);
+                        const rErr = new RequestError('Bad response from server.', this._params.host, this._params.path, res);
+                        return reject(rErr);
                     }
                     resolve(res)
                 });
             });
 
             if (this._body.length) r.write(this._body);
-            r.on('error', (err) => reject(err));
+            r.on('error', (err) => {
+                const rErr = new RequestError('Connection Error', this._params.host, this._params.path);
+                reject(rErr)
+            });
             r.end();
         });
     }
