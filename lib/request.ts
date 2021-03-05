@@ -90,7 +90,7 @@ class Request extends BaseClient implements PromiseLike<Response> {
             try {
                 return await this.attempt();
             } catch (e) {
-                if (e.statusCode >= 500 && this._retry.retries > attempts) {
+                if ((e.statusCode >= 500 || !e.statusCode) && this._retry.retries > attempts) {
                     attempts += 1;
                     if (this._retry.delay) {
                         let wait = this._retry.delay;
