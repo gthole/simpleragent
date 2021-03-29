@@ -53,11 +53,12 @@ class Request extends BaseClient implements PromiseLike<Response> {
 
     attempt(): Promise<Response> {
         return new Promise<Response>((resolve, reject) => {
+            const params = {...this._params};
             if (Object.keys(this._query).length) {
-                this._params.path += '?' + querystring.stringify(this._query);
+                params.path += '?' + querystring.stringify({...this._query});
             }
-            this._params.headers = this._headers;
-            const r = protos[this._protocol].request(this._params, (res) => {
+            params.headers = {...this._headers};
+            const r = protos[this._protocol].request(params, (res) => {
                 const chunks = [];
                 res.on('data', (chunk) => chunks.push(chunk));
                 res.on('end', () => {
@@ -68,7 +69,12 @@ class Request extends BaseClient implements PromiseLike<Response> {
                         res.body = null;
                     }
                     if (res.statusCode >= 300) {
-                        const rErr = new RequestError('Bad response from server.', this._params.host, this._params.path, res);
+                        const rErr = new RequestError(
+                            'Bad response from server.',
+                            params.host,
+                            params.path,
+                            res
+                        );
                         return reject(rErr);
                     }
                     resolve(res)
@@ -77,7 +83,11 @@ class Request extends BaseClient implements PromiseLike<Response> {
 
             if (this._body.length) r.write(this._body);
             r.on('error', (err) => {
-                const rErr = new RequestError('Connection Error: ' + err.message, this._params.host, this._params.path);
+                const rErr = new RequestError(
+                    'Connection Error: ' + err.message,
+                    params.host,
+                    params.path
+                );
                 reject(rErr)
             });
             r.end();

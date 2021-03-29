@@ -168,7 +168,7 @@ describe('SimplerAgent Request', () => {
     it('should retry without a delay', async () => {
         let attempts = 0;
         nock('http://www.unit-test.com:80')
-            .get('/api/v1')
+            .get('/api/v1?q=foo')
             .times(5)
             .reply((uri, body) => {
                 attempts += 1;
@@ -179,7 +179,7 @@ describe('SimplerAgent Request', () => {
             });
 
         const resp = await request
-            .get('http://www.unit-test.com/api/v1')
+            .get('http://www.unit-test.com/api/v1?q=foo')
             .retry(4);
 
         assert.equal(resp.statusCode, 200);
