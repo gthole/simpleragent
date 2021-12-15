@@ -47,6 +47,7 @@ class Request extends BaseClient implements PromiseLike<Response> {
             this._body = JSON.stringify(body);
             this._headers['Content-Length'] = this._body.length;
             this._headers['Content-Type'] = 'application/json';
+            this._headers['Accept'] = 'application/json';
         }
         return this;
     }
