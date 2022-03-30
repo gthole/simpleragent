@@ -13,7 +13,9 @@ stuff.
 
 ## SimplerAgent
 - Can probably do most of what you need for API requests
-- Has no production dependencies
+- Automatically requests and parses JSON
+- Automatically requests and decodes gzip/brotli responses
+- Only uses standard libraries, no production dependencies
 - Is small: roughly 300 lines of code
 - Is typed with Typescript
 - Has good test coverage

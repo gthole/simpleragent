@@ -1,7 +1,9 @@
 import https = require('https');
 import http = require('http');
+import zlib = require('zlib');
 import querystring = require('querystring');
 import urlParse = require('url');
+import stream = require('stream');
 import BaseClient = require('./base-client');
 import RequestError = require('./request-error');
 import Response = require('./response');
@@ -48,6 +50,7 @@ class Request extends BaseClient implements PromiseLike<Response> {
             this._headers['Content-Length'] = this._body.length;
             this._headers['Content-Type'] = 'application/json';
             this._headers['Accept'] = 'application/json';
+            this._headers['Accept-Encoding'] = 'gzip, deflate, br';
         }
         return this;
     }
@@ -59,11 +62,19 @@ class Request extends BaseClient implements PromiseLike<Response> {
                 params.path += '?' + querystring.stringify({...this._query});
             }
             params.headers = {...this._headers};
-            const r = protos[this._protocol].request(params, (res) => {
-                const chunks = [];
-                res.on('data', (chunk) => chunks.push(chunk));
-                res.on('end', () => {
-                    res.text = Buffer.concat(chunks).toString();
+            const req = protos[this._protocol].request(params, (res) => {
+                res.text = '';
+                const output = new stream.Writable();
+                const onError = (err) => {
+                    if (err) console.log(err);
+                    output.end();
+                }
+                output._write = (chunk, encoding, next) => {
+                    res.text += chunk.toString();
+                    next();
+                }
+
+                output.on('close', () => {
                     try {
                         res.body = JSON.parse(res.text);
                     } catch (e) {
@@ -80,10 +91,23 @@ class Request extends BaseClient implements PromiseLike<Response> {
                     }
                     resolve(res)
                 });
+
+                switch (res.headers['content-encoding']) {
+                    case 'br':
+                      stream.pipeline(res, zlib.createBrotliDecompress(), output, onError);
+                      break;
+                    case 'gzip':
+                    case 'deflate':
+                      stream.pipeline(res, zlib.createUnzip(), output, onError);
+                      break;
+                    default:
+                      stream.pipeline(res, output, onError);
+                      break;
+                }
             });
 
-            if (this._body.length) r.write(this._body);
-            r.on('error', (err) => {
+            if (this._body.length) req.write(this._body);
+            req.on('error', (err) => {
                 const rErr = new RequestError(
                     'Connection Error: ' + err.message,
                     params.host,
@@ -91,7 +115,7 @@ class Request extends BaseClient implements PromiseLike<Response> {
                 );
                 reject(rErr)
             });
-            r.end();
+            req.end();
         });
     }
 

@@ -1,4 +1,5 @@
 import assert = require('assert');
+import zlib = require('zlib');
 import nock = require('nock');
 import request = require('../lib/');
 
@@ -247,4 +248,41 @@ describe('SimplerAgent Request', () => {
         assert(Date.now() - start > 700);
     });
 
+    it('should decode compressed content', async () => {
+        const mock = nock('http://www.unit-test.com:80')
+            .get('/api/v1')
+            .reply(200, (uri, requestBody, cb) => {
+                // Return a gzip response
+                zlib.deflate('{"result": "OK"}', (err, buffer) => {
+                    cb(null, [200, buffer, {
+                        'content-encoding': 'gzip',
+                        'content-type': 'application/json'
+                    }]);
+                });
+            });
+
+        const resp = await request.get('http://www.unit-test.com/api/v1');
+
+        assert.equal(resp.text, '{"result": "OK"}');
+        assert.equal(resp.body.result, 'OK');
+    });
+
+    it('should decode brotli compressed content', async () => {
+        const mock = nock('http://www.unit-test.com:80')
+            .get('/api/v1')
+            .reply(200, (uri, requestBody, cb) => {
+                // Return a brotli response
+                zlib.brotliCompress('{"result": "OK"}', (err, buffer) => {
+                    cb(null, [200, buffer, {
+                        'content-encoding': 'br',
+                        'content-type': 'application/json'
+                    }]);
+                });
+            });
+
+        const resp = await request.get('http://www.unit-test.com/api/v1');
+
+        assert.equal(resp.text, '{"result": "OK"}');
+        assert.equal(resp.body.result, 'OK');
+    });
 });
