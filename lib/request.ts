@@ -29,6 +29,8 @@ class Request extends BaseClient implements PromiseLike<Response> {
             path: parsed.pathname,
             method: method,
         }
+        this._headers['Accept'] = 'application/json';
+        this._headers['Accept-Encoding'] = 'gzip, deflate, br';
     }
 
     query(arg: string | {[k: string]: string | number | boolean}): Request {
@@ -50,8 +52,6 @@ class Request extends BaseClient implements PromiseLike<Response> {
             this._headers['Content-Length'] = this._body.length;
             this._headers['Content-Type'] = 'application/json';
         }
-        this._headers['Accept'] = 'application/json';
-        this._headers['Accept-Encoding'] = 'gzip, deflate, br';
         return this;
     }
 
