@@ -125,12 +125,7 @@ Simpleragent can abort requests that do not complete within a certain period of
 time.
 
 ```javascript
-// Set a 5 second timeout
-const resp = await request
-    .get('http://www.example.com/return-500')
-    .retry(5);
-
-// A policy with optional delay and optional exponential backoff
+// Set a 5 second timeout, which takes a milliseconds argument
 try {
     await request
         .get('http://www.example.com/delay-10-seconds')
