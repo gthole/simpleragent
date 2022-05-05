@@ -285,4 +285,60 @@ describe('SimplerAgent Request', () => {
         assert.equal(resp.text, '{"result": "OK"}');
         assert.equal(resp.body.result, 'OK');
     });
+
+    it('should not throw a timeout error on successful response', async () => {
+        nock('http://www.unit-test.com:80')
+            .get('/api/v1?foo=bar')
+            .delay(700)
+            .reply(200, {result: 'OK'});
+
+        const resp = await request
+                .get('http://www.unit-test.com/api/v1')
+                .timeout(1000)
+                .query({foo: 'bar'});
+
+        assert.equal(resp.statusCode, 200);
+
+        // Wait a bit longer to confirm an error is not later thrown
+        await new Promise(r => setTimeout(r, 700));
+    });
+
+    it('should abort on timeout', async () => {
+        nock('http://www.unit-test.com:80')
+            .get('/api/v1?foo=bar')
+            .delay(1000)
+            .reply(200, {result: 'OK'});
+
+        try {
+            await request
+                .get('http://www.unit-test.com/api/v1')
+                .timeout(500)
+                .query({foo: 'bar'});
+        } catch (err) {
+            assert.ok(err);
+            assert(!err.statusCode);
+            return;
+        }
+        throw new Error('Did not throw an error');
+    });
+
+    it('should abort on timeout for 500 and then not throw an error', async () => {
+        nock('http://www.unit-test.com:80')
+            .get('/api/v1?foo=bar')
+            .delay(1000)
+            .reply(500, {result: 'Bad!'});
+
+        try {
+            await request
+                .get('http://www.unit-test.com/api/v1')
+                .timeout(500)
+                .query({foo: 'bar'});
+        } catch (err) {
+            assert.ok(err);
+            assert(!err.statusCode);
+            return;
+        }
+        throw new Error('Did not throw an error');
+    });
+
 });

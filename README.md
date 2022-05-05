@@ -15,6 +15,7 @@ stuff.
 - Can probably do most of what you need for API requests
 - Automatically requests and parses JSON
 - Automatically requests and decodes gzip/brotli responses
+- Handles retry logic and timeout aborts
 - Only uses standard libraries, no production dependencies
 - Is small: roughly 300 lines of code
 - Is typed with Typescript
@@ -119,6 +120,27 @@ try {
 `delay` is the number of milliseconds to wait between retries, and `backoff` is
 a multiplicative factor to apply to the `delay` with each retry.
 
+### Timeouts
+Simpleragent can abort requests that do not complete within a certain period of
+time.
+
+```javascript
+// Set a 5 second timeout
+const resp = await request
+    .get('http://www.example.com/return-500')
+    .retry(5);
+
+// A policy with optional delay and optional exponential backoff
+try {
+    await request
+        .get('http://www.example.com/delay-10-seconds')
+        .timeout(5000);
+} catch (e) {
+    // An error message indicates the timeout
+    console.log(e.message);
+}
+```
+
 ### Methods Supported
 
 - `get`
@@ -172,6 +194,5 @@ Everything else.
 - Progress Tracking: Don't use it for big uploads
 - Browser version: Node only
 - TLS options: Maybe will add these later
-- Aborts / Timeouts
 - Following Redirects
 - Plugins, etc.

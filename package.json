@@ -1,9 +1,12 @@
 {
     "name": "simpleragent",
-    "version": "1.7.2",
+    "version": "1.8.0",
     "author": "gthole@gmail.com",
     "bugs": {
         "url": "https://github.com/gthole/simpleragent/issues"
+    },
+    "engines" : {
+        "node" : ">=14.0.0"
     },
     "description": "A NodeJS simplified version of SuperAgent.js for making JSON HTTP requests",
     "homepage": "https://github.com/gthole/simpleragent#readme",

@@ -41,7 +41,8 @@ class Client extends BaseClient {
     private build(method, path): Request {
         return new Request(method, this._prefix + (path || ''))
             .set(this._headers)
-            .retry(this._retry);
+            .retry(this._retry)
+            .timeout(this._timeout);
     }
 }
 

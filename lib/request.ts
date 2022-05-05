@@ -62,7 +62,9 @@ class Request extends BaseClient implements PromiseLike<Response> {
                 params.path += '?' + querystring.stringify({...this._query});
             }
             params.headers = {...this._headers};
-            const req = protos[this._protocol].request(params, (res) => {
+            let res;
+            const req = protos[this._protocol].request(params, (response) => {
+                res = response;
                 res.text = '';
                 const output = new stream.Writable();
                 const onError = (err) => {
@@ -80,6 +82,7 @@ class Request extends BaseClient implements PromiseLike<Response> {
                     } catch (e) {
                         res.body = null;
                     }
+                    clearTimeout(this._timeout);
                     if (res.statusCode >= 300) {
                         const rErr = new RequestError(
                             'Bad response from server.',
@@ -113,9 +116,26 @@ class Request extends BaseClient implements PromiseLike<Response> {
                     params.host,
                     params.path
                 );
+                clearTimeout(this._timeout);
                 reject(rErr)
             });
+
+            req.on('abort', () => {
+                const rErr = new RequestError(
+                    `Timeout Error: Request did not complete within ${this._timeout}ms`,
+                    params.host,
+                    params.path
+                );
+                clearTimeout(this._timeout);
+                reject(rErr);
+            });
+
             req.end();
+            if (this._ttl) {
+                this._timeout = setTimeout(() => {
+                    if (!(res && res.complete)) req.abort()
+                }, this._ttl);
+            }
         });
     }
 
