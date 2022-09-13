@@ -1,5 +1,3 @@
-import { RequestOptions } from 'https';
-
 interface IRetryPolicy {
     retries: number;
     delay?: number;
@@ -7,7 +5,6 @@ interface IRetryPolicy {
 }
 
 class BaseClient {
-    protected _params: RequestOptions;
     protected _headers: {[k: string]: string | number | string[]} = {};
     protected _retry: IRetryPolicy = {retries: 0};
     protected _ttl: number;
@@ -44,14 +41,6 @@ class BaseClient {
             this._retry = policy;
         }
         return this;
-    }
-
-    cert(certstr: string) {
-        this._params.cert = certstr;
-    }
-
-    key(keystr: string) {
-        this._params.key = keystr;
     }
 }
 

@@ -165,4 +165,18 @@ describe('SimplerAgent Client', () => {
                 done();
             });
     });
+
+    it('should accept certificates', async () => {
+        // NB we are only testing that the params are passed through to the
+        // internal request options
+        const client = new Client('https://www.unit-test.com/api')
+            .cert('mycertificatestring')
+            .key('mykeystring');
+
+        const req = client.delete('/v2');
+        // @ts-ignore
+        assert.equal(req._params.cert, 'mycertificatestring');
+        // @ts-ignore
+        assert.equal(req._params.key, 'mykeystring');
+    });
 });

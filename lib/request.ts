@@ -15,6 +15,7 @@ class Request extends BaseClient implements PromiseLike<Response> {
     private _protocol: string;
     private _query: querystring.ParsedUrlQuery;
     private _body: string = '';
+    private _params: https.RequestOptions;
 
     constructor(method: string, url: string) {
         super();
@@ -40,6 +41,16 @@ class Request extends BaseClient implements PromiseLike<Response> {
             inner = arg as querystring.ParsedUrlQuery;
         }
         Object.keys(inner).forEach((k) => this._query[k] = inner[k]);
+        return this;
+    }
+
+    cert(certstr: string) {
+        this._params.cert = certstr;
+        return this;
+    }
+
+    key(keystr: string) {
+        this._params.key = keystr;
         return this;
     }
 
