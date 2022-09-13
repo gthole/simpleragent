@@ -65,16 +65,18 @@ describe('SimplerAgent Request', () => {
     });
 
     it('should return connection errors', async () => {
+        nock('http://www.unit-test.com:80')
+            .get(/.*/)
+            .replyWithError({code: 'ENOTFOUND', message: 'getaddrinfo ENOTFOUND'})
         try {
             await request
-                .get('http://alskdfjaerhgliualkajsfawehfjklsfjka.com/api/v1');
+                .get('http://www.unit-test.com/api/v1');
         } catch (err) {
             assert.equal(err.statusCode, undefined);
             assert.equal(
                 err.message,
-                'Connection Error: getaddrinfo ' +
-                'ENOTFOUND alskdfjaerhgliualkajsfawehfjklsfjka.com ' +
-                'host=alskdfjaerhgliualkajsfawehfjklsfjka.com:80 ' +
+                'Connection Error: getaddrinfo ENOTFOUND ' +
+                'host=www.unit-test.com:80 ' +
                 'path=/api/v1 ' +
                 'status=none'
             );

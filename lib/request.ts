@@ -14,7 +14,6 @@ const protos = {http, https},
 class Request extends BaseClient implements PromiseLike<Response> {
     private _protocol: string;
     private _query: querystring.ParsedUrlQuery;
-    private _params: http.ClientRequestArgs;
     private _body: string = '';
 
     constructor(method: string, url: string) {

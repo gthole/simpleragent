@@ -136,6 +136,16 @@ try {
 }
 ```
 
+### Client Certificates
+
+```javascipt
+// Send a client certificate
+await request
+    .get('https://my-mtls-endpoint.com/foo')
+    .cert(fs.readFileSync('agent-cert.pem'))
+    .key(fs.readFileSync('agent-key.pem'));
+```
+
 ### Methods Supported
 
 - `get`
@@ -179,6 +189,8 @@ async function post(payload) {
 }
 ```
 
+`Client` instances also support the `cert` and `key` options for client TLS.
+
 ## What Isn't Supported?
 Everything else.
 
@@ -188,6 +200,5 @@ Everything else.
 - Sessions: Cookies not saved
 - Progress Tracking: Don't use it for big uploads
 - Browser version: Node only
-- TLS options: Maybe will add these later
 - Following Redirects
 - Plugins, etc.
