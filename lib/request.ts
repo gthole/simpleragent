@@ -59,9 +59,9 @@ class Request extends BaseClient implements PromiseLike<Response> {
             this._body = body;
         } else {
             this._body = JSON.stringify(body);
-            this._headers['Content-Length'] = this._body.length;
             this._headers['Content-Type'] = 'application/json';
         }
+        this._headers['Content-Length'] = Buffer.byteLength(this._body);
         return this;
     }
 
