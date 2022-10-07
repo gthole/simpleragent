@@ -54,7 +54,7 @@ class Client extends BaseClient {
         const req = new Request(method, this._prefix + (path || ''))
             .set(this._headers)
             .retry(this._retry)
-            .timeout(this._timeout);
+            .timeout(this._ttl);
 
         // Pass through TLS options
         if (this._cert) req.cert(this._cert);

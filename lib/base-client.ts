@@ -8,7 +8,6 @@ class BaseClient {
     protected _headers: {[k: string]: string | number | string[]} = {};
     protected _retry: IRetryPolicy = {retries: 0};
     protected _ttl: number;
-    protected _timeout: any; // Timeout
 
     auth(username: string, password: string): this {
         const encoded = Buffer.from(username + ':' + password).toString('base64');

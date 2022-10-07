@@ -66,7 +66,7 @@ class Request extends BaseClient implements PromiseLike<Response> {
     }
 
     attempt(): Promise<Response> {
-        return new Promise<Response>((resolve, reject) => {
+        const promise = new Promise<Response>((resolve, reject) => {
             const params = {...this._params};
             if (Object.keys(this._query).length) {
                 params.path += '?' + querystring.stringify({...this._query});
@@ -92,7 +92,6 @@ class Request extends BaseClient implements PromiseLike<Response> {
                     } catch (e) {
                         res.body = null;
                     }
-                    clearTimeout(this._timeout);
                     if (res.statusCode >= 300) {
                         const rErr = new RequestError(
                             'Bad response from server.',
@@ -126,27 +125,34 @@ class Request extends BaseClient implements PromiseLike<Response> {
                     params.host,
                     params.path
                 );
-                clearTimeout(this._timeout);
                 reject(rErr)
             });
 
             req.on('abort', () => {
                 const rErr = new RequestError(
-                    `Timeout Error: Request did not complete within ${this._timeout}ms`,
+                    `Request was aborted`,
                     params.host,
                     params.path
                 );
-                clearTimeout(this._timeout);
                 reject(rErr);
             });
 
             req.end();
-            if (this._ttl) {
-                this._timeout = setTimeout(() => {
-                    if (!(res && res.complete)) req.abort()
-                }, this._ttl);
-            }
         });
+
+        if (this._ttl) {
+            return Promise.race([
+                promise,
+                new Promise((_, r) => {
+                    setTimeout(
+                        () => r(new RequestError('Request timed out', this._params.host, this._params.path)),
+                        this._ttl
+                    )
+                })
+            ]) as Promise<Response>;
+        } else {
+            return promise;
+        }
     }
 
     async promise(): Promise<Response> {
