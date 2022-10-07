@@ -205,7 +205,9 @@ describe('SimplerAgent Request', () => {
         throw new Error('Did not throw an error');
     });
 
-    it('should retry with a delay', async () => {
+    it('should retry with a delay', async function() {
+        this.slow(1000);
+
         const start = Date.now();
         let attempts = 0;
         nock('http://www.unit-test.com:80')
@@ -227,7 +229,9 @@ describe('SimplerAgent Request', () => {
         assert(Date.now() - start > 200);
     });
 
-    it('should retry with a backoff', async () => {
+    it('should retry with a backoff', async function() {
+        this.slow(2000);
+
         const start = Date.now();
         let attempts = 0;
         nock('http://www.unit-test.com:80')
@@ -288,7 +292,9 @@ describe('SimplerAgent Request', () => {
         assert.equal(resp.body.result, 'OK');
     });
 
-    it('should not throw a timeout error on successful response', async () => {
+    it('should not throw a timeout error on successful response', async function() {
+        this.slow(3000);
+
         nock('http://www.unit-test.com:80')
             .get('/api/v1?foo=bar')
             .delay(700)
@@ -305,7 +311,9 @@ describe('SimplerAgent Request', () => {
         await new Promise(r => setTimeout(r, 700));
     });
 
-    it('should abort on timeout', async () => {
+    it('should abort on timeout', async function() {
+        this.slow(2000);
+
         nock('http://www.unit-test.com:80')
             .get('/api/v1?foo=bar')
             .delay(1000)
@@ -324,7 +332,9 @@ describe('SimplerAgent Request', () => {
         throw new Error('Did not throw an error');
     });
 
-    it('should abort on timeout for 500 and then not throw an error', async () => {
+    it('should abort on timeout for 500 and then not throw an error', async function() {
+        this.slow(2000);
+
         nock('http://www.unit-test.com:80')
             .get('/api/v1?foo=bar')
             .delay(1000)

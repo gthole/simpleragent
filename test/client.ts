@@ -179,4 +179,26 @@ describe('SimplerAgent Client', () => {
         // @ts-ignore
         assert.equal(req._params.key, 'mykeystring');
     });
+
+    it('should abort on timeout', async function() {
+        this.slow(2000);
+
+        nock('http://www.unit-test.com:80')
+            .get('/api/v1?foo=bar')
+            .delay(1000)
+            .reply(200, {result: 'OK'});
+
+        const client = new Client('http://www.unit-test.com/api')
+            .timeout(500);
+
+        try {
+            await client.get('/v1').query({foo: 'bar'});
+        } catch (err) {
+            assert.ok(err);
+            assert(err.message === 'Request was aborted host=www.unit-test.com:80 path=/api/v1?foo=bar status=none');
+            assert(!err.statusCode);
+            return;
+        }
+        throw new Error('Did not throw an error');
+    });
 });
