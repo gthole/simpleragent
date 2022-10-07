@@ -66,6 +66,7 @@ class Request extends BaseClient implements PromiseLike<Response> {
     }
 
     attempt(): Promise<Response> {
+        let req;
         const promise = new Promise<Response>((resolve, reject) => {
             const params = {...this._params};
             if (Object.keys(this._query).length) {
@@ -73,7 +74,7 @@ class Request extends BaseClient implements PromiseLike<Response> {
             }
             params.headers = {...this._headers};
             let res;
-            const req = protos[this._protocol].request(params, (response) => {
+            req = protos[this._protocol].request(params, (response) => {
                 res = response;
                 res.text = '';
                 const output = new stream.Writable();
@@ -145,7 +146,10 @@ class Request extends BaseClient implements PromiseLike<Response> {
                 promise,
                 new Promise((_, r) => {
                     setTimeout(
-                        () => r(new RequestError('Request timed out', this._params.host, this._params.path)),
+                        () => {
+                            req.abort();
+                            r(new RequestError('Request timed out', this._params.host, this._params.path));
+                        },
                         this._ttl
                     )
                 })
