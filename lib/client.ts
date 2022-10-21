@@ -5,6 +5,7 @@ class Client extends BaseClient {
     private _prefix: string;
     private _cert: string;
     private _key: string;
+    private _ca: string[];
 
     constructor(prefix: string, headers?: {[k: string]: string | number | string[]}) {
         super();
@@ -50,6 +51,11 @@ class Client extends BaseClient {
         return this;
     }
 
+    ca(castrs: string[]) {
+        this._ca = castrs;
+        return this;
+    }
+
     private build(method, path): Request {
         const req = new Request(method, this._prefix + (path || ''))
             .set(this._headers)
@@ -59,6 +65,7 @@ class Client extends BaseClient {
         // Pass through TLS options
         if (this._cert) req.cert(this._cert);
         if (this._key) req.key(this._key);
+        if (this._ca) req.ca(this._ca);
 
         return req;
     }

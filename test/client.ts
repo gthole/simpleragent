@@ -171,13 +171,16 @@ describe('SimplerAgent Client', () => {
         // internal request options
         const client = new Client('https://www.unit-test.com/api')
             .cert('mycertificatestring')
-            .key('mykeystring');
+            .key('mykeystring')
+            .ca(['string1']);
 
         const req = client.delete('/v2');
         // @ts-ignore
         assert.equal(req._params.cert, 'mycertificatestring');
         // @ts-ignore
         assert.equal(req._params.key, 'mykeystring');
+        // @ts-ignore
+        assert.equal(req._params.ca[0], 'string1');
     });
 
     it('should abort on timeout', async function() {

@@ -54,6 +54,11 @@ class Request extends BaseClient implements PromiseLike<Response> {
         return this;
     }
 
+    ca(castrs: string[]) {
+        this._params.ca = castrs;
+        return this;
+    }
+
     send(body: string | Object): Request {
         if (typeof body === 'string') {
             this._body = body;
