@@ -3,9 +3,9 @@ import BaseClient = require('./base-client');
 
 class Client extends BaseClient {
     private _prefix: string;
-    private _cert: string;
-    private _key: string;
-    private _ca: string[];
+    private _cert: string | Buffer;
+    private _key: string | Buffer;
+    private _ca: Array<string | Buffer>;
 
     constructor(prefix: string, headers?: {[k: string]: string | number | string[]}) {
         super();
@@ -41,17 +41,17 @@ class Client extends BaseClient {
         return this.build('DELETE', path);
     }
 
-    cert(certstr: string) {
+    cert(certstr: string | Buffer) {
         this._cert = certstr;
         return this;
     }
 
-    key(keystr: string) {
+    key(keystr: string | Buffer) {
         this._key = keystr;
         return this;
     }
 
-    ca(castrs: string[]) {
+    ca(castrs: Array<string | Buffer>) {
         this._ca = castrs;
         return this;
     }

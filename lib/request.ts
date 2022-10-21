@@ -44,17 +44,17 @@ class Request extends BaseClient implements PromiseLike<Response> {
         return this;
     }
 
-    cert(certstr: string) {
+    cert(certstr: string | Buffer) {
         this._params.cert = certstr;
         return this;
     }
 
-    key(keystr: string) {
+    key(keystr: string | Buffer) {
         this._params.key = keystr;
         return this;
     }
 
-    ca(castrs: string[]) {
+    ca(castrs: Array<string | Buffer>) {
         this._params.ca = castrs;
         return this;
     }
