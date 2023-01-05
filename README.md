@@ -138,7 +138,7 @@ try {
 
 ### Client Certificates
 
-```javascipt
+```javascript
 // Send a client certificate
 await request
     .get('https://my-mtls-endpoint.com/foo')
