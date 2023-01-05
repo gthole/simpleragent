@@ -1,7 +1,11 @@
 import assert = require('assert');
+import { promisify } from 'util';
 import zlib = require('zlib');
 import nock = require('nock');
 import request = require('../lib/');
+
+const deflate = promisify(zlib.deflate);
+const brotliCompress = promisify(zlib.brotliCompress);
 
 describe('SimplerAgent Request', () => {
     afterEach(() => nock.cleanAll());
@@ -40,7 +44,7 @@ describe('SimplerAgent Request', () => {
             assert.equal(err.statusCode, 400);
             assert.equal(
                 err.message,
-                'Bad response from server. host=www.unit-test.com:80 path=/api/v1?foo=Bulstrode status=400\n{"result":"Bad request"}'
+                'Bad response from server. host=www.unit-test.com path=/api/v1?foo=Bulstrode status=400\n{"result":"Bad request"}'
             );
             return;
         }
@@ -76,7 +80,7 @@ describe('SimplerAgent Request', () => {
             assert.equal(
                 err.message,
                 'Connection Error: getaddrinfo ENOTFOUND ' +
-                'host=www.unit-test.com:80 ' +
+                'host=www.unit-test.com ' +
                 'path=/api/v1 ' +
                 'status=none'
             );
@@ -155,12 +159,12 @@ describe('SimplerAgent Request', () => {
     });
 
     it('should accept headers as an object', (done) => {
-        const headers = {Authorization: 'my-key', 'X-Other-Header': 'other-value'};
-        nock('http://www.unit-test.com:80', headers).delete('/api/v2').reply(204);
+        const reqheaders = {Authorization: 'my-key', 'X-Other-Header': 'other-value'};
+        nock('http://www.unit-test.com:80', {reqheaders}).delete('/api/v2').reply(204);
 
         // @ts-ignore
         request.delete('http://www.unit-test.com/api/v2')
-            .set(headers)
+            .set(reqheaders)
             .end((err, resp) => {
                 assert.ok(!err);
                 assert.equal(resp.statusCode, 204);
@@ -255,16 +259,13 @@ describe('SimplerAgent Request', () => {
     });
 
     it('should decode compressed content', async () => {
+        const response = await deflate('{"result": "OK"}');
+        // Return a gzip response
         const mock = nock('http://www.unit-test.com:80')
             .get('/api/v1')
-            .reply(200, (uri, requestBody, cb) => {
-                // Return a gzip response
-                zlib.deflate('{"result": "OK"}', (err, buffer) => {
-                    cb(null, [200, buffer, {
-                        'content-encoding': 'gzip',
-                        'content-type': 'application/json'
-                    }]);
-                });
+            .reply(200, response, {
+                'content-encoding': 'gzip',
+                'content-type': 'application/json'
             });
 
         const resp = await request.get('http://www.unit-test.com/api/v1');
@@ -274,16 +275,12 @@ describe('SimplerAgent Request', () => {
     });
 
     it('should decode brotli compressed content', async () => {
+        const response = await brotliCompress('{"result": "OK"}');
         const mock = nock('http://www.unit-test.com:80')
             .get('/api/v1')
-            .reply(200, (uri, requestBody, cb) => {
-                // Return a brotli response
-                zlib.brotliCompress('{"result": "OK"}', (err, buffer) => {
-                    cb(null, [200, buffer, {
-                        'content-encoding': 'br',
-                        'content-type': 'application/json'
-                    }]);
-                });
+            .reply(200, response, {
+                'content-encoding': 'br',
+                'content-type': 'application/json'
             });
 
         const resp = await request.get('http://www.unit-test.com/api/v1');

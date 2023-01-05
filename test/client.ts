@@ -153,12 +153,12 @@ describe('SimplerAgent Client', () => {
     });
 
     it('should accept headers as an object', (done) => {
-        const headers = {Authorization: 'my-key', 'X-Other-Header': 'other-value'};
-        nock('http://www.unit-test.com:80', headers).delete('/api/v2').reply(204);
+        const reqheaders = {Authorization: 'my-key', 'X-Other-Header': 'other-value'};
+        nock('http://www.unit-test.com:80', {reqheaders}).delete('/api/v2').reply(204);
 
         const client = new Client('http://www.unit-test.com/api');
         client.delete('/v2')
-            .set(headers)
+            .set(reqheaders)
             .end((err, resp) => {
                 assert.ok(!err);
                 assert.equal(resp.statusCode, 204);
@@ -198,7 +198,7 @@ describe('SimplerAgent Client', () => {
             await client.get('/v1').query({foo: 'bar'});
         } catch (err) {
             assert.ok(err);
-            assert(err.message === 'Request was aborted host=www.unit-test.com:80 path=/api/v1?foo=bar status=none');
+            assert.equal(err.message, 'Request timed out host=www.unit-test.com path=/api/v1 status=none');
             assert(!err.statusCode);
             return;
         }
