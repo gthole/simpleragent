@@ -72,12 +72,12 @@ class Request extends BaseClient implements PromiseLike<Response> {
 
     attempt(): Promise<Response> {
         let req;
+        const params = {...this._params};
+        if (Object.keys(this._query).length) {
+            params.path += '?' + querystring.stringify({...this._query});
+        }
+        params.headers = {...this._headers};
         const promise = new Promise<Response>((resolve, reject) => {
-            const params = {...this._params};
-            if (Object.keys(this._query).length) {
-                params.path += '?' + querystring.stringify({...this._query});
-            }
-            params.headers = {...this._headers};
             let res;
             req = protos[this._protocol].request(params, (response) => {
                 res = response;
@@ -99,12 +99,7 @@ class Request extends BaseClient implements PromiseLike<Response> {
                         res.body = null;
                     }
                     if (res.statusCode >= 300) {
-                        const rErr = new RequestError(
-                            'Bad response from server.',
-                            params.host,
-                            params.path,
-                            res
-                        );
+                        const rErr = new RequestError('Bad response from server.', this, params, res);
                         return reject(rErr);
                     }
                     resolve(res)
@@ -126,20 +121,12 @@ class Request extends BaseClient implements PromiseLike<Response> {
 
             if (this._body.length) req.write(this._body);
             req.on('error', (err) => {
-                const rErr = new RequestError(
-                    'Connection Error: ' + err.message,
-                    params.host,
-                    params.path
-                );
+                const rErr = new RequestError('Connection Error: ' + err.message, this, params);
                 reject(rErr)
             });
 
             req.on('abort', () => {
-                const rErr = new RequestError(
-                    `Request was aborted`,
-                    params.host,
-                    params.path
-                );
+                const rErr = new RequestError(`Request was aborted`, this, params);
                 reject(rErr);
             });
 
@@ -153,7 +140,8 @@ class Request extends BaseClient implements PromiseLike<Response> {
                     setTimeout(
                         () => {
                             req.abort();
-                            r(new RequestError('Request timed out', this._params.host, this._params.path));
+                            const error = new RequestError('Request timed out', this, params);
+                            r(error);
                         },
                         this._ttl
                     )

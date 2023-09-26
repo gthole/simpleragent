@@ -198,10 +198,20 @@ describe('SimplerAgent Client', () => {
             await client.get('/v1').query({foo: 'bar'});
         } catch (err) {
             assert.ok(err);
-            assert.equal(err.message, 'Request timed out host=www.unit-test.com path=/api/v1 status=none');
+            assert.equal(err.message, 'Request timed out method=GET host=www.unit-test.com path=/api/v1?foo=bar status=none');
             assert(!err.statusCode);
             return;
         }
         throw new Error('Did not throw an error');
+    });
+
+    it('should accept a base url without a path', async () => {
+        nock('http://www.unit-test.com:80')
+            .get('/api/v1')
+            .reply(200, {result: 'OK'});
+
+        const client = new Client('http://www.unit-test.com');
+        const resp = await client.get('/api/v1');
+        assert.equal(resp.body.result, 'OK');
     });
 });

@@ -44,7 +44,7 @@ describe('SimplerAgent Request', () => {
             assert.equal(err.statusCode, 400);
             assert.equal(
                 err.message,
-                'Bad response from server. host=www.unit-test.com path=/api/v1?foo=Bulstrode status=400\n{"result":"Bad request"}'
+                'Bad response from server. method=GET host=www.unit-test.com path=/api/v1?foo=Bulstrode status=400\n{"result":"Bad request"}'
             );
             return;
         }
@@ -80,6 +80,7 @@ describe('SimplerAgent Request', () => {
             assert.equal(
                 err.message,
                 'Connection Error: getaddrinfo ENOTFOUND ' +
+                'method=GET ' +
                 'host=www.unit-test.com ' +
                 'path=/api/v1 ' +
                 'status=none'
