@@ -1,11 +1,11 @@
-import assert = require('assert');
+import * as assert from 'assert';
 import { promisify } from 'util';
-import zlib = require('zlib');
-import nock = require('nock');
-import request = require('../lib/');
+import { deflate as zlibDeflate, brotliCompress as zlibBrotliCompress } from 'zlib';
+import * as nock from 'nock';
+import { request } from '../lib/';
 
-const deflate = promisify(zlib.deflate);
-const brotliCompress = promisify(zlib.brotliCompress);
+const deflate = promisify(zlibDeflate);
+const brotliCompress = promisify(zlibBrotliCompress);
 
 describe('SimplerAgent Request', () => {
     afterEach(() => nock.cleanAll());

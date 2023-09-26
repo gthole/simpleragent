@@ -1,8 +1,6 @@
-import http = require('http');
+import { IncomingMessage } from 'http';
 
-class Response extends http.IncomingMessage {
+export class Response extends IncomingMessage {
     body: any;
     text: string;
 }
-
-export = Response;

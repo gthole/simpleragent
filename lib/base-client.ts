@@ -1,10 +1,10 @@
-interface IRetryPolicy {
+export interface IRetryPolicy {
     retries: number;
     delay?: number;
     backoff?: number;
 }
 
-class BaseClient {
+export class BaseClient {
     protected _headers: {[k: string]: string | number | string[]} = {};
     protected _retry: IRetryPolicy = {retries: 0};
     protected _ttl: number;
@@ -42,5 +42,3 @@ class BaseClient {
         return this;
     }
 }
-
-export = BaseClient;

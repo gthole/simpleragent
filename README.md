@@ -84,14 +84,15 @@ await request
 
 ### Error Handling
 
-Errors are thrown for non-2xx responses, with the status code and response
-object on the thrown error
+Errors are thrown for non-2xx responses, with the status code, request object,
+and response object on the thrown error.
 
 ```
 try {
     const resp = await request.get('http://www.example.com/return-400');
 } catch (e) {
     console.log(e.statusCode);
+    console.log(e.request);
     console.log(e.response.body);
 }
 ```

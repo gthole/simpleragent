@@ -1,14 +1,14 @@
-import https = require('https');
-import Request = require('./request');
-import Response = require('./response');
+import { RequestOptions } from 'https';
+import { Request } from './request';
+import { Response } from './response';
 
-class RequestError extends Error {
+export class RequestError extends Error {
     status: number;
     statusCode: number;
     request: Request;
     response: Response;
 
-    constructor(msg: string, req: Request, params: https.RequestOptions, res?: Response) {
+    constructor(msg: string, req: Request, params: RequestOptions, res?: Response) {
         const attrs = [
             `method=${params.method}`,
             `host=${params.host}`,
@@ -26,5 +26,3 @@ class RequestError extends Error {
         }
     }
 }
-
-export = RequestError;

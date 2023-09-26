@@ -1,28 +1,28 @@
-import https = require('https');
-import http = require('http');
-import zlib = require('zlib');
-import querystring = require('querystring');
-import urlParse = require('url');
-import stream = require('stream');
-import BaseClient = require('./base-client');
-import RequestError = require('./request-error');
-import Response = require('./response');
+import { request, RequestOptions } from 'https';
+import { request as httpRequest } from 'http';
+import { createBrotliDecompress, createUnzip } from 'zlib';
+import { ParsedUrlQuery, parse, stringify } from 'querystring';
+import { parse as urlParse } from 'url';
+import { Writable, pipeline } from 'stream';
+import { BaseClient } from './base-client';
+import { RequestError } from './request-error';
+import { Response } from './response';
 
-const protos = {http, https},
+const protos = {http: httpRequest, https: request},
       ports = {http: 80, https: 443};
 
-class Request extends BaseClient implements PromiseLike<Response> {
+export class Request extends BaseClient implements PromiseLike<Response> {
     private _protocol: string;
-    private _query: querystring.ParsedUrlQuery;
+    private _query: ParsedUrlQuery;
     private _body: string = '';
-    private _params: https.RequestOptions;
+    private _params: RequestOptions;
 
     constructor(method: string, url: string) {
         super();
-        const parsed = urlParse.parse(url);
+        const parsed = urlParse(url);
 
         this._protocol = (parsed.protocol || 'http:').slice(0, -1);
-        this._query = querystring.parse(parsed.query);
+        this._query = parse(parsed.query);
         this._params = {
             host: parsed.hostname,
             port: parsed.port || ports[this._protocol],
@@ -34,11 +34,11 @@ class Request extends BaseClient implements PromiseLike<Response> {
     }
 
     query(arg: string | {[k: string]: string | number | boolean}): Request {
-        let inner: querystring.ParsedUrlQuery;
+        let inner: ParsedUrlQuery;
         if (typeof arg === 'string') {
-            inner = querystring.parse(arg as string);
+            inner = parse(arg as string);
         } else {
-            inner = arg as querystring.ParsedUrlQuery;
+            inner = arg as ParsedUrlQuery;
         }
         Object.keys(inner).forEach((k) => this._query[k] = inner[k]);
         return this;
@@ -74,15 +74,15 @@ class Request extends BaseClient implements PromiseLike<Response> {
         let req;
         const params = {...this._params};
         if (Object.keys(this._query).length) {
-            params.path += '?' + querystring.stringify({...this._query});
+            params.path += '?' + stringify({...this._query});
         }
         params.headers = {...this._headers};
         const promise = new Promise<Response>((resolve, reject) => {
             let res;
-            req = protos[this._protocol].request(params, (response) => {
+            req = protos[this._protocol](params, (response) => {
                 res = response;
                 res.text = '';
-                const output = new stream.Writable();
+                const output = new Writable();
                 const onError = (err) => {
                     if (err) console.log(err);
                     output.end();
@@ -107,14 +107,14 @@ class Request extends BaseClient implements PromiseLike<Response> {
 
                 switch (res.headers['content-encoding']) {
                     case 'br':
-                      stream.pipeline(res, zlib.createBrotliDecompress(), output, onError);
+                      pipeline(res, createBrotliDecompress(), output, onError);
                       break;
                     case 'gzip':
                     case 'deflate':
-                      stream.pipeline(res, zlib.createUnzip(), output, onError);
+                      pipeline(res, createUnzip(), output, onError);
                       break;
                     default:
-                      stream.pipeline(res, output, onError);
+                      pipeline(res, output, onError);
                       break;
                 }
             });
@@ -201,5 +201,3 @@ class Request extends BaseClient implements PromiseLike<Response> {
         );
     }
 }
-
-export = Request;

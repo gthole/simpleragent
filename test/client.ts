@@ -1,6 +1,6 @@
-import assert = require('assert');
-import nock = require('nock');
-import Client = require('../lib/client');
+import * as assert from 'assert';
+import * as nock from 'nock';
+import { Client } from '../lib/client';
 
 describe('SimplerAgent Client', () => {
     afterEach(() => nock.cleanAll());

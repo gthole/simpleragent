@@ -1,55 +1,43 @@
+import { Request } from './request';
+
 /*
- * Light-weight HTTP client & JSON request class syntactic sugar
+ * Core classes
  */
 
-import Client = require('./client');
-import RequestError = require('./request-error');
-import Request = require('./request');
-import Response = require('./response');
+export { Client } from './client';
+export { RequestError } from './request-error';
+export { Request } from './request';
+export { Response } from './response';
 
 /*
  * Helper functions
  */
 
-function get(url: string): Request {
+export function get(url: string): Request {
     return new Request('GET', url);
 }
 
-function head(url: string): Request {
+export function head(url: string): Request {
     return new Request('HEAD', url);
 }
 
-function post(url: string): Request {
+export function post(url: string): Request {
     return new Request('POST', url);
 }
 
-function put(url: string): Request {
+export function put(url: string): Request {
     return new Request('PUT', url);
 }
 
-function patch(url: string): Request {
+export function patch(url: string): Request {
     return new Request('PATCH', url);
 }
 
-function del(url: string): Request {
+export function del(url: string): Request {
     return new Request('DELETE', url);
 }
 
-const request = {get, head, post, put, patch, del};
-
-export {
-    request,
-    Client,
-    RequestError,
-    Request,
-    Response,
-    get,
-    head,
-    post,
-    put,
-    patch,
-    del
-};
+export const request = {get, head, post, put, patch, del, delete: del};
 
 // Patch around typescript declaration file issue
 exports.delete = del;

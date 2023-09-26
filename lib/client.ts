@@ -1,7 +1,7 @@
-import Request = require('./request');
-import BaseClient = require('./base-client');
+import { Request } from './request';
+import { BaseClient } from './base-client';
 
-class Client extends BaseClient {
+export class Client extends BaseClient {
     private _prefix: string;
     private _cert: string | Buffer;
     private _key: string | Buffer;
@@ -70,5 +70,3 @@ class Client extends BaseClient {
         return req;
     }
 }
-
-export = Client;
