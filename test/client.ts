@@ -1,6 +1,6 @@
 import * as assert from 'assert';
 import * as nock from 'nock';
-import { Client } from '../lib/client';
+import { Client, Request, Response, IPlugin } from '../lib';
 
 describe('SimplerAgent Client', () => {
     afterEach(() => nock.cleanAll());
@@ -152,18 +152,14 @@ describe('SimplerAgent Client', () => {
         assert.equal(resp.statusCode, 204);
     });
 
-    it('should accept headers as an object', (done) => {
+    it('should accept headers as an object', async () => {
         const reqheaders = {Authorization: 'my-key', 'X-Other-Header': 'other-value'};
         nock('http://www.unit-test.com:80', {reqheaders}).delete('/api/v2').reply(204);
 
         const client = new Client('http://www.unit-test.com/api');
-        client.delete('/v2')
+        const resp = await client.delete('/v2')
             .set(reqheaders)
-            .end((err, resp) => {
-                assert.ok(!err);
-                assert.equal(resp.statusCode, 204);
-                done();
-            });
+        assert.equal(resp.statusCode, 204);
     });
 
     it('should accept certificates', async () => {
@@ -198,7 +194,7 @@ describe('SimplerAgent Client', () => {
             await client.get('/v1').query({foo: 'bar'});
         } catch (err) {
             assert.ok(err);
-            assert.equal(err.message, 'Request timed out method=GET host=www.unit-test.com path=/api/v1?foo=bar status=none');
+            assert.equal(err.message, 'Request was aborted method=GET host=www.unit-test.com path=/api/v1?foo=bar status=none');
             assert(!err.statusCode);
             return;
         }
@@ -213,5 +209,34 @@ describe('SimplerAgent Client', () => {
         const client = new Client('http://www.unit-test.com');
         const resp = await client.get('/api/v1');
         assert.equal(resp.body.result, 'OK');
+    });
+
+    it('should support a plugin', async () => {
+        let responseCalled = false;
+        let requestCalled = false;
+
+        class TestPlugin implements IPlugin {
+            start: number;
+
+            async onRequest(req: Request) {
+                requestCalled = true;
+            }
+
+            async onResponse(req: Request, res: Response) {
+                responseCalled = true;
+            }
+        }
+
+        nock('http://www.example.com')
+            .get('/some-path')
+            .reply(200, {result: 'OK'});
+
+        const client = new Client('http://www.example.com')
+            .use(TestPlugin);
+        const resp = await client.get('/some-path');
+
+        assert.equal(resp.body.result, 'OK');
+        assert.equal(requestCalled, true);
+        assert.equal(responseCalled, true);
     });
 });

@@ -58,9 +58,12 @@ export class Client extends BaseClient {
 
     private build(method, path): Request {
         const req = new Request(method, this._prefix + (path || ''))
-            .set(this._headers)
-            .retry(this._retry)
-            .timeout(this._ttl);
+            .set(this._headers);
+
+        // Pass through plugins
+        for (const plugin of this._plugins) {
+            req.use(plugin);
+        }
 
         // Pass through TLS options
         if (this._cert) req.cert(this._cert);

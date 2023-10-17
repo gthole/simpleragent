@@ -137,6 +137,18 @@ try {
 }
 ```
 
+### Redirects
+By default simpleragent does not follow redirects, but it can be configured
+to follow a limited number of redirections.
+
+```
+await request
+    .get('http://example.com/go-to-https')
+    .redirects(2);
+```
+
+Subsequent redirects will throw a `RequestError` with `statusCode` of 300 or 301.
+
 ### Client Certificates
 
 ```javascript
@@ -154,7 +166,7 @@ await request
 - `post`
 - `put`
 - `patch`
-- `del`
+- `delete`
 
 ## Client Objects
 Clients reduce the overall boilerplate required for each request.  If you have
@@ -192,6 +204,55 @@ async function post(payload) {
 
 `Client` instances also support the `cert` and `key` options for client TLS.
 
+### Plugins
+Simpleragent supports a plugin interface that allows users to modify, retry,
+cache, or log requests.
+
+```
+import { Request, Response, IPlugin } from 'simpleragent';
+
+class LoggingPlugin implements IPlugin {
+    start: number;
+
+    onRequest(req: Request) {
+        this.start = Date.now();
+    }
+
+    onResponse(req: Request, res: Response) {
+        console.log(`method=${req.method} path=${req.path} duration=${Date.now() - this.start}`);
+    }
+}
+
+const client = new Client('https://www.example.com')
+    .use(LoggingPlugin);
+
+// All successful requests made with this client will log the statement
+client.get('/some-path');
+```
+
+Plugins should implement the `IPlugin` interface and be passed into the `use`
+method via class name. They are instantiated at the start of a request and
+reused for subsequent requests, so any plugin instance data (such as `start`
+in the example above) is available between retries but reset at the start of
+a new request. To have simpleragent retry a request, a plugin should return
+`{retry: true}` from either a `onResponse` or `onError` plugin method.
+
+Plugin methods available:
+    - `onRequest`: Called before sending the request to the server. Adjustments
+      can be made to the request at this point, such as adding a trace id header.
+    - `onResponse`: Called after a 2xx response is received from the server.
+      Retry logic on successful responses could be implemented here, such as
+      waiting for an asynchronous job request to complete.
+    - `onError`: Called when a non-2xx status is returned, or a connection
+      error occurs.
+
+Simpleragent internally uses plugins for its `retry`, `redirect`, and `timeout`
+functionality.
+
+Plugins are executed at each stage in the order that they're configured on the
+client or request object.
+
+
 ## What Isn't Supported?
 Everything else.
 
@@ -201,5 +262,3 @@ Everything else.
 - Sessions: Cookies not saved
 - Progress Tracking: Don't use it for big uploads
 - Browser version: Node only
-- Following Redirects
-- Plugins, etc.

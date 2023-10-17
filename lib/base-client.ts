@@ -1,13 +1,11 @@
-export interface IRetryPolicy {
-    retries: number;
-    delay?: number;
-    backoff?: number;
-}
+import { IPlugin } from './plugins/base';
+import { redirect } from './plugins/redirect';
+import { retry, IRetryPolicy } from './plugins/retry';
+import { timeout } from './plugins/timeout';
 
 export class BaseClient {
     protected _headers: {[k: string]: string | number | string[]} = {};
-    protected _retry: IRetryPolicy = {retries: 0};
-    protected _ttl: number;
+    protected _plugins: (new () => IPlugin)[] = [];
 
     auth(username: string, password: string): this {
         const encoded = Buffer.from(username + ':' + password).toString('base64');
@@ -26,8 +24,13 @@ export class BaseClient {
         return this;
     }
 
+    use(plugin: new () => IPlugin): this {
+        this._plugins.push(plugin);
+        return this;
+    }
+
     timeout(ttl: number): this {
-        this._ttl = ttl;
+        this.use(timeout(ttl));
         return this;
     }
 
@@ -35,10 +38,15 @@ export class BaseClient {
     retry(policy: IRetryPolicy): this;
     retry(policy): this {
         if (typeof policy === 'number') {
-            this._retry = {retries: policy};
+            this.use(retry({retries: policy}));
         } else {
-            this._retry = policy;
+            this.use(retry(policy));
         }
+        return this;
+    }
+
+    redirects(max_redirects: number): this {
+        this.use(redirect(max_redirects));
         return this;
     }
 }

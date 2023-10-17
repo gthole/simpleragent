@@ -159,18 +159,15 @@ describe('SimplerAgent Request', () => {
         assert.equal(resp.statusCode, 204);
     });
 
-    it('should accept headers as an object', (done) => {
+    it('should accept headers as an object', async () => {
         const reqheaders = {Authorization: 'my-key', 'X-Other-Header': 'other-value'};
         nock('http://www.unit-test.com:80', {reqheaders}).delete('/api/v2').reply(204);
 
         // @ts-ignore
-        request.delete('http://www.unit-test.com/api/v2')
+        const resp = await request.delete('http://www.unit-test.com/api/v2')
             .set(reqheaders)
-            .end((err, resp) => {
-                assert.ok(!err);
-                assert.equal(resp.statusCode, 204);
-                done();
-            });
+
+        assert.equal(resp.statusCode, 204);
     });
 
     it('should retry without a delay', async () => {
@@ -346,6 +343,44 @@ describe('SimplerAgent Request', () => {
         } catch (err) {
             assert.ok(err);
             assert(!err.statusCode);
+            return;
+        }
+        throw new Error('Did not throw an error');
+    });
+
+    it('should follow a redirect', (done) => {
+        nock('http://unit-test.com:80')
+            .get('/api')
+            .reply(301, {}, {Location: 'http://www.unit-test.com/api/'});
+
+        nock('http://www.unit-test.com:80')
+            .get('/api/')
+            .reply(200, {result: 'OK'})
+
+        // Test callback support
+        request
+            .get('http://unit-test.com/api')
+            .redirects(1)
+			.end((err, resp) => {
+				assert.ok(!err);
+        		assert.equal(resp.body?.result, 'OK');
+                done();
+			});
+    });
+
+    it('should not follow redirects beyond the max limit', async () => {
+        nock('http://unit-test.com:80')
+            .get('/api')
+            .times(3)
+            .reply(300, {}, {Location: 'http://unit-test.com/api'});
+
+        try {
+            await request
+                .get('http://unit-test.com/api')
+                .redirects(2);
+        } catch (err) {
+            assert.ok(err);
+            assert.equal(err.statusCode, 300);
             return;
         }
         throw new Error('Did not throw an error');

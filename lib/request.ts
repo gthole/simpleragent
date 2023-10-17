@@ -1,9 +1,10 @@
 import { request, RequestOptions } from 'https';
 import { request as httpRequest } from 'http';
-import { createBrotliDecompress, createUnzip } from 'zlib';
 import { ParsedUrlQuery, parse, stringify } from 'querystring';
 import { parse as urlParse } from 'url';
 import { Writable, pipeline } from 'stream';
+import { createBrotliDecompress, createUnzip } from 'zlib';
+import { IPlugin } from './plugins/base';
 import { BaseClient } from './base-client';
 import { RequestError } from './request-error';
 import { Response } from './response';
@@ -12,25 +13,47 @@ const protos = {http: httpRequest, https: request},
       ports = {http: 80, https: 443};
 
 export class Request extends BaseClient implements PromiseLike<Response> {
+    public abort: () => void;
     private _protocol: string;
     private _query: ParsedUrlQuery;
     private _body: string = '';
     private _params: RequestOptions;
+    private _pluginInstances: IPlugin[];
 
     constructor(method: string, url: string) {
         super();
         const parsed = urlParse(url);
 
-        this._protocol = (parsed.protocol || 'http:').slice(0, -1);
-        this._query = parse(parsed.query);
-        this._params = {
-            host: parsed.hostname,
-            port: parsed.port || ports[this._protocol],
-            path: parsed.pathname,
-            method: method,
-        }
+        this._params = {method};
+        this.location(url);
         this._headers['Accept'] = 'application/json';
         this._headers['Accept-Encoding'] = 'gzip, deflate, br';
+    }
+
+    get method() {
+        return this._params.method;
+    }
+
+    get path() {
+        return this._params.path;
+    }
+
+    get host() {
+        return this._params.host;
+    }
+
+    get querystring() {
+        return stringify({...this._query});
+    }
+
+    location(url: string): this {
+        const parsed = urlParse(url);
+        this._protocol = (parsed.protocol || 'http:').slice(0, -1);
+        this._query = parse(parsed.query);
+        this._params.host = parsed.hostname;
+        this._params.port = parsed.port || ports[this._protocol];
+        this._params.path = parsed.pathname;
+        return this;
     }
 
     query(arg: string | {[k: string]: string | number | boolean}): Request {
@@ -77,7 +100,7 @@ export class Request extends BaseClient implements PromiseLike<Response> {
             params.path += '?' + stringify({...this._query});
         }
         params.headers = {...this._headers};
-        const promise = new Promise<Response>((resolve, reject) => {
+        return new Promise<Response>((resolve, reject) => {
             let res;
             req = protos[this._protocol](params, (response) => {
                 res = response;
@@ -125,6 +148,7 @@ export class Request extends BaseClient implements PromiseLike<Response> {
                 reject(rErr)
             });
 
+            this.abort = () => req.abort();
             req.on('abort', () => {
                 const rErr = new RequestError(`Request was aborted`, this, params);
                 reject(rErr);
@@ -132,46 +156,39 @@ export class Request extends BaseClient implements PromiseLike<Response> {
 
             req.end();
         });
-
-        if (this._ttl) {
-            return Promise.race([
-                promise,
-                new Promise((_, r) => {
-                    setTimeout(
-                        () => {
-                            req.abort();
-                            const error = new RequestError('Request timed out', this, params);
-                            r(error);
-                        },
-                        this._ttl
-                    )
-                })
-            ]) as Promise<Response>;
-        } else {
-            return promise;
-        }
     }
 
     async promise(): Promise<Response> {
-        let attempts = 0;
         while (true) {
+            await this.runPlugins('onRequest');
             try {
-                return await this.attempt();
-            } catch (e) {
-                if ((e.statusCode >= 500 || !e.statusCode) && this._retry.retries > attempts) {
-                    attempts += 1;
-                    if (this._retry.delay) {
-                        let wait = this._retry.delay;
-                        if (this._retry.backoff) {
-                            wait *= this._retry.backoff ** (attempts - 1);
-                        }
-                        await new Promise(r => setTimeout(r, wait));
-                    }
-                } else {
-                    throw e;
+                const res: Response = await this.attempt();
+                const pres = await this.runPlugins('onResponse', res);
+                if (pres?.retry) {
+                    continue;
                 }
+                return res;
+            } catch (err) {
+                const pres = await this.runPlugins('onError', err);
+                if (pres?.retry) {
+                    continue;
+                }
+                throw err;
             }
         }
+    }
+
+    private async runPlugins(name: string, ...args) {
+        if (!this._pluginInstances) this._pluginInstances = this._plugins.map(pc => new pc());
+        const plugins = this._pluginInstances.filter(p => Boolean(p[name]));
+        let result;
+        for (const plugin of plugins) {
+            const pres = await plugin[name](this, ...args);
+            if (pres?.retry) {
+                result = pres;
+            }
+        }
+        return result;
     }
 
     /*
