@@ -97,6 +97,19 @@ try {
 }
 ```
 
+If there is no http connection, then a `ConnectionError` is thrown, which
+does not have a status or response set.
+
+```
+import { request, ConnectionError } from 'simpleragent';
+
+try {
+    const resp = await request.get('http://not-a-real-domain/foo');
+} catch (e) {
+    console.log(e instanceof ConnectionError);
+}
+```
+
 ### Retrying
 Simpleragent will auto-retry 5xx errors if you set a `retry` policy.
 
@@ -123,9 +136,11 @@ a multiplicative factor to apply to the `delay` with each retry.
 
 ### Timeouts
 Simpleragent can abort requests that do not complete within a certain period of
-time.
+time. In these cases, an `AbortError` subclass of `RequestError` is thrown.
 
 ```javascript
+import { request, AbortError } from 'simpleragent';
+
 // Set a 5 second timeout, which takes a milliseconds argument
 try {
     await request
@@ -133,6 +148,7 @@ try {
         .timeout(5000);
 } catch (e) {
     // An error message indicates the timeout
+    assert.equal(err instanceof AbortError, true);
     console.log(e.message);
 }
 ```
