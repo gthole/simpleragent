@@ -5,7 +5,7 @@ import { Request } from './request';
  */
 
 export { Client } from './client';
-export { RequestError } from './request-error';
+export { RequestError, AbortError, ConnectionError } from './request-error';
 export { Request } from './request';
 export { Response } from './response';
 export { IPluginResult, IPlugin } from './plugins/base';

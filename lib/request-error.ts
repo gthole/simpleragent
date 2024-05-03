@@ -26,3 +26,7 @@ export class RequestError extends Error {
         }
     }
 }
+
+export class AbortError extends RequestError { }
+export class ConnectionError extends RequestError { }
+

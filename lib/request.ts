@@ -6,7 +6,7 @@ import { Writable, pipeline } from 'stream';
 import { createBrotliDecompress, createUnzip } from 'zlib';
 import { IPlugin } from './plugins/base';
 import { BaseClient } from './base-client';
-import { RequestError } from './request-error';
+import { RequestError, AbortError, ConnectionError } from './request-error';
 import { Response } from './response';
 
 const protos = {http: httpRequest, https: request},
@@ -144,13 +144,13 @@ export class Request extends BaseClient implements PromiseLike<Response> {
 
             if (this._body.length) req.write(this._body);
             req.on('error', (err) => {
-                const rErr = new RequestError('Connection Error: ' + err.message, this, params);
+                const rErr = new ConnectionError('Connection Error: ' + err.message, this, params);
                 reject(rErr)
             });
 
             this.abort = () => req.abort();
             req.on('abort', () => {
-                const rErr = new RequestError(`Request was aborted`, this, params);
+                const rErr = new AbortError(`Request was aborted`, this, params);
                 reject(rErr);
             });
 

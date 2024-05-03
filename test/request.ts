@@ -2,7 +2,7 @@ import * as assert from 'assert';
 import { promisify } from 'util';
 import { deflate as zlibDeflate, brotliCompress as zlibBrotliCompress } from 'zlib';
 import * as nock from 'nock';
-import { request } from '../lib/';
+import { request, AbortError, ConnectionError } from '../lib/';
 
 const deflate = promisify(zlibDeflate);
 const brotliCompress = promisify(zlibBrotliCompress);
@@ -76,6 +76,7 @@ describe('SimplerAgent Request', () => {
             await request
                 .get('http://www.unit-test.com/api/v1');
         } catch (err) {
+            assert.ok(err instanceof ConnectionError);
             assert.equal(err.statusCode, undefined);
             assert.equal(
                 err.message,
@@ -321,6 +322,7 @@ describe('SimplerAgent Request', () => {
                 .query({foo: 'bar'});
         } catch (err) {
             assert.ok(err);
+            assert.ok(err instanceof AbortError);
             assert(!err.statusCode);
             return;
         }
@@ -342,6 +344,7 @@ describe('SimplerAgent Request', () => {
                 .query({foo: 'bar'});
         } catch (err) {
             assert.ok(err);
+            assert.ok(err instanceof AbortError);
             assert(!err.statusCode);
             return;
         }
