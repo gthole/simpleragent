@@ -41,15 +41,18 @@ Import with require:
 const { request, Response } = require('simpleragent');
 const request = require('simpleragent');
 ```
+
 or with `import` in Typescript
-```
+
+```typescript
 import { request, Response, ResponseError } from 'simpleragent';
 import { get, put } from 'simpleragent';
 ```
 
 ### Making Requests
 Requests are Promises-first and can be await'ed:
-```javascript
+
+```typescript
 const resp = await request.get('https://www.example.com')
     .auth('my-user', 'pass')
     .query({name: 'bananas'});
@@ -65,7 +68,7 @@ console.log(resp.body);
 
 You can also use callbacks with the `end` method:
 
-```javascript
+```typescript
 request.get('http://www.example.com').end((err, resp) => ... );
 ```
 
@@ -74,7 +77,7 @@ request.get('http://www.example.com').end((err, resp) => ... );
 Drop JSON into the `send` method. Don't worry about setting the Content-Type,
 it's set to `application/json` for you.
 
-```
+```typescript
 // Sending JSON bodies, HTTPS, and setting headers, using callbacks
 await request
     .post('https://api.example.com/v1/fruit')
@@ -87,7 +90,7 @@ await request
 Errors are thrown for non-2xx responses, with the status code, request object,
 and response object on the thrown error.
 
-```
+```typescript
 try {
     const resp = await request.get('http://www.example.com/return-400');
 } catch (e) {
@@ -100,7 +103,7 @@ try {
 If there is no http connection, then a `ConnectionError` is thrown, which
 does not have a status or response set.
 
-```
+```typescript
 import { request, ConnectionError } from 'simpleragent';
 
 try {
@@ -113,7 +116,7 @@ try {
 ### Retrying
 Simpleragent will auto-retry 5xx errors if you set a `retry` policy.
 
-```javascript
+```typescript
 // A simple policy to retry 5xx errors five times
 const resp = await request
     .get('http://www.example.com/return-500')
@@ -138,7 +141,7 @@ a multiplicative factor to apply to the `delay` with each retry.
 Simpleragent can abort requests that do not complete within a certain period of
 time. In these cases, an `AbortError` subclass of `RequestError` is thrown.
 
-```javascript
+```typescript
 import { request, AbortError } from 'simpleragent';
 
 // Set a 5 second timeout, which takes a milliseconds argument
@@ -157,7 +160,7 @@ try {
 By default simpleragent does not follow redirects, but it can be configured
 to follow a limited number of redirections.
 
-```
+```typescript
 await request
     .get('http://example.com/go-to-https')
     .redirects(2);
@@ -167,7 +170,7 @@ Subsequent redirects will throw a `RequestError` with `statusCode` of 300 or 301
 
 ### Client Certificates
 
-```javascript
+```typescript
 // Send a client certificate
 await request
     .get('https://my-mtls-endpoint.com/foo')
@@ -193,7 +196,7 @@ The Client constructor takes a path prefix as an argument. You can add or update
 headers with the `set` method. Then use the client as you would `simpleragent`,
 but without all the extra code.
 
-```javascript
+```typescript
 import { Client } from 'simpleragent';
 
 const client = new request.Client('https://www.example.com/api/v1');
@@ -224,7 +227,7 @@ async function post(payload) {
 Simpleragent supports a plugin interface that allows users to modify, retry,
 cache, or log requests.
 
-```
+```typescript
 import { Request, Response, IPlugin } from 'simpleragent';
 
 class LoggingPlugin implements IPlugin {
