@@ -257,13 +257,14 @@ a new request. To have simpleragent retry a request, a plugin should return
 `{retry: true}` from either a `onResponse` or `onError` plugin method.
 
 Plugin methods available:
-    - `onRequest`: Called before sending the request to the server. Adjustments
-      can be made to the request at this point, such as adding a trace id header.
-    - `onResponse`: Called after a 2xx response is received from the server.
-      Retry logic on successful responses could be implemented here, such as
-      waiting for an asynchronous job request to complete.
-    - `onError`: Called when a non-2xx status is returned, or a connection
-      error occurs.
+
+- `onRequest`: Called before sending the request to the server. Adjustments
+  can be made to the request at this point, such as adding a trace id header.
+- `onResponse`: Called after a 2xx response is received from the server.
+  Retry logic on successful responses could be implemented here, such as
+  waiting for an asynchronous job request to complete.
+- `onError`: Called when a non-2xx status is returned, or a connection
+  error occurs.
 
 Simpleragent internally uses plugins for its `retry`, `redirect`, and `timeout`
 functionality.

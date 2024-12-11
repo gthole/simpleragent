@@ -364,11 +364,11 @@ describe('SimplerAgent Request', () => {
         request
             .get('http://unit-test.com/api')
             .redirects(1)
-			.end((err, resp) => {
-				assert.ok(!err);
-        		assert.equal(resp.body?.result, 'OK');
+            .end((err, resp) => {
+                assert.ok(!err);
+                assert.equal(resp.body?.result, 'OK');
                 done();
-			});
+            });
     });
 
     it('should not follow redirects beyond the max limit', async () => {
